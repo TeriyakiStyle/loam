@@ -1,0 +1,23 @@
+# LOAM — title page quotes
+#
+# One quote per line, in the form:   quote text | attribution
+# Blank lines and lines starting with # are ignored.
+# Add, remove or reorder freely — nothing else needs changing.
+#
+# Sources are noted here for your own checking. They are not shown on the page.
+
+# Widely attributed to Gandhi, but I could not find a primary source —
+# every citation traces back to quote-aggregator sites. Worth verifying.
+To forget how to dig the earth and to tend the soil is to forget ourselves. | Mahatma Gandhi
+
+# Wendell Berry, The Unsettling of America (1977)
+The soil is the great connector of lives, the source and destination of all. | Wendell Berry
+
+# Franklin D. Roosevelt, letter to state governors, 1937
+The nation that destroys its soil destroys itself. | Franklin D. Roosevelt
+
+# Aldo Leopold, A Sand County Almanac (1949)
+Land is not merely soil; it is a fountain of energy flowing through a circuit of soils, plants and animals. | Aldo Leopold
+
+# Masanobu Fukuoka, The One-Straw Revolution (1975)
+The ultimate goal of farming is not the growing of crops, but the cultivation and perfection of human beings. | Masanobu Fukuoka

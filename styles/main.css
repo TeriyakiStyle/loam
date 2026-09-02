@@ -41,12 +41,43 @@ body {
 .cube { width: min(60vw, 280px); height: auto; }
 .field-scene .cube { width: min(38vw, 170px); }
 
-.tagline {
+/* The cube is the way in, so it needs to look touchable. */
+.cube-link {
+  display: block;
+  line-height: 0;
+  border-radius: 6px;
+  transition: transform 220ms ease;
+}
+.cube-link:hover { transform: translateY(-5px); }
+.cube-link:active { transform: translateY(-1px); }
+.cube-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 10px; }
+
+/* Reserve the space before the quote loads so nothing jumps. */
+.quote {
   margin: 0;
-  max-width: 28ch;
+  max-width: 34ch;
+  min-height: 4.5em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+.quote.is-ready { opacity: 1; }
+
+.quote blockquote {
+  margin: 0;
   font-size: 0.95rem;
-  letter-spacing: 0.02em;
-  opacity: 0.72;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  opacity: 0.78;
+}
+.quote figcaption {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.5;
 }
 
 .day { margin: 0; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; }

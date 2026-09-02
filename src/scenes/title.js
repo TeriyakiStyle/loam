@@ -1,22 +1,41 @@
 // ---------------------------------------------------------------------------
 // TITLE SCENE — the front page.
 //
-// Every scene is the same shape: it gets an element and the store, fills the
-// element, and returns a function that cleans up after itself. Nothing else
-// in the app needs to know what's inside.
+// The cube is the way in: it's a real link, so it works with the keyboard,
+// middle-click and the Back button without any of that being written here.
+// The quote is drawn at random from assets/quotes.txt on each visit.
 // ---------------------------------------------------------------------------
 
 import { cubeSVG, SOILS } from '../art/cube.js';
+import { loadQuotes, pick } from '../quotes.js';
 
 export function render(el, _store) {
   el.innerHTML = `
     <section class="title-scene">
       <img class="wordmark" src="assets/wordmark-loam.svg" alt="LOAM" width="141" height="38">
-      ${cubeSVG(SOILS.loam, 256)}
-      <p class="tagline">A garden that keeps its own time.</p>
-      <a class="enter" href="#/field">Enter</a>
+
+      <a class="cube-link" href="#/field" aria-label="Enter">
+        ${cubeSVG(SOILS.loam, 256)}
+      </a>
+
+      <figure class="quote" data-quote>
+        <blockquote data-quote-text></blockquote>
+        <figcaption data-quote-author></figcaption>
+      </figure>
     </section>
   `;
 
-  return () => {};   // nothing to tear down yet
+  let alive = true;
+
+  loadQuotes()
+    .then(quotes => {
+      if (!alive || !quotes.length) return;
+      const quote = pick(quotes);
+      el.querySelector('[data-quote-text]').textContent = `“${quote.text}”`;
+      el.querySelector('[data-quote-author]').textContent = quote.author;
+      el.querySelector('[data-quote]').classList.add('is-ready');
+    })
+    .catch(() => { /* no quotes file, no quote — the page still works */ });
+
+  return () => { alive = false; };
 }
