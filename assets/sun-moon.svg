@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Time passing: days cycling, moon stepping through a lunation">
+  <style>
+    svg {
+      --sun:    #F2A33C;
+      --moon:   #DCE5F2;
+      --crater: #B6C4DC;
+      --shadow: #342B4F;
+      --dur:  2s;    /* one day: sun -> night -> sun */
+      --days: 29;    /* lunation length; must match the steps() count below */
+    }
+
+    /* colours, so the custom properties above actually drive it */
+    .sunDisc    { fill: var(--sun); }
+    .rays       { stroke: var(--sun); }
+    .shadowDisc { fill: var(--shadow); }
+    .moonBody   { fill: var(--moon); }
+    .craters    { fill: var(--crater); }
+
+    /* ---- fast clock: one day ---------------------------------- */
+    .sunDisc { animation: daySide   var(--dur) linear infinite; }
+    .rays    { animation: rays      var(--dur) linear infinite;
+               transform-box: view-box; transform-origin: 50px 50px; }
+    .night   { animation: nightSide var(--dur) linear infinite; }
+
+    /* ---- slow clock: one lunation, frozen all night -----------
+       steps() holds one phase per day and jumps mid-daylight, so
+       the moon never shifts while it is on screen.               */
+    .halfLit { animation: halfSide calc(var(--dur) * var(--days)) steps(29) infinite; }
+    .term    { animation: termWidth calc(var(--dur) * var(--days)) steps(29) infinite,
+                          termSign  calc(var(--dur) * var(--days)) steps(29) infinite;
+               transform-box: view-box; transform-origin: 50px 50px; }
+
+    /* Terminator half-width = |cos(2*pi*phase)| : the true ellipse. */
+    @keyframes termWidth {
+      0%     { transform: scaleX(1); }
+      6.25%  { transform: scaleX(0.924); }
+      12.5%  { transform: scaleX(0.707); }
+      18.75% { transform: scaleX(0.383); }
+      25%    { transform: scaleX(0.001); }
+      31.25% { transform: scaleX(0.383); }
+      37.5%  { transform: scaleX(0.707); }
+      43.75% { transform: scaleX(0.924); }
+      50%    { transform: scaleX(1); }
+      56.25% { transform: scaleX(0.924); }
+      62.5%  { transform: scaleX(0.707); }
+      68.75% { transform: scaleX(0.383); }
+      75%    { transform: scaleX(0.001); }
+      81.25% { transform: scaleX(0.383); }
+      87.5%  { transform: scaleX(0.707); }
+      93.75% { transform: scaleX(0.924); }
+      100%   { transform: scaleX(1); }
+    }
+
+    /* Crescent subtracts the ellipse, gibbous adds it.
+       Flips at the quarters, where the ellipse is edge-on. */
+    @keyframes termSign {
+      0%,  24.9% { fill: #000; }
+      25%, 74.9% { fill: #fff; }
+      75%, 100%  { fill: #000; }
+    }
+
+    /* Which limb is lit. Flips at new and full, where it cannot be seen. */
+    @keyframes halfSide {
+      0%,  49.9% { transform: translateX(0); }
+      50%, 100%  { transform: translateX(-30px); }
+    }
+
+    /* ---- day keyframes ---------------------------------------- */
+    @keyframes daySide   { 0%,10% { opacity: 1; } 19%,71% { opacity: 0; } 80%,100% { opacity: 1; } }
+    @keyframes nightSide { 0%,10% { opacity: 0; } 19%,71% { opacity: 1; } 80%,100% { opacity: 0; } }
+
+    @keyframes rays {
+      0%   { opacity: 1; transform: rotate(0deg)   scale(1); }
+      9%   { opacity: 1; transform: rotate(6deg)   scale(1); }
+      18%  { opacity: 0; transform: rotate(14deg)  scale(0.55); }
+      72%  { opacity: 0; transform: rotate(-14deg) scale(0.55); }
+      81%  { opacity: 1; transform: rotate(-6deg)  scale(1); }
+      100% { opacity: 1; transform: rotate(0deg)   scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sunDisc,.rays,.night,.halfLit,.term {
+        animation-play-state: paused;
+        animation-delay: -13s;
+      }
+    }
+  </style>
+
+  <defs>
+    <!-- lit region = one half disc, plus or minus a half ellipse -->
+    <mask id="phaseMask">
+      <circle cx="50" cy="50" r="24" fill="#000"/>
+      <rect class="halfLit" x="50" y="18" width="32" height="64" fill="#fff"/>
+      <ellipse class="term" cx="50" cy="50" rx="24" ry="24" fill="#000"/>
+    </mask>
+  </defs>
+
+  <g class="rays" fill="none" stroke="#F2A33C" stroke-width="5.5" stroke-linecap="round">
+    <line x1="50" y1="18" x2="50" y2="7"/>
+    <line x1="50" y1="18" x2="50" y2="7" transform="rotate(45 50 50)"/>
+    <line x1="50" y1="18" x2="50" y2="7" transform="rotate(90 50 50)"/>
+    <line x1="50" y1="18" x2="50" y2="7" transform="rotate(135 50 50)"/>
+    <line x1="50" y1="18" x2="50" y2="7" transform="rotate(180 50 50)"/>
+    <line x1="50" y1="18" x2="50" y2="7" transform="rotate(225 50 50)"/>
+    <line x1="50" y1="18" x2="50" y2="7" transform="rotate(270 50 50)"/>
+    <line x1="50" y1="18" x2="50" y2="7" transform="rotate(315 50 50)"/>
+  </g>
+
+  <!-- the whole disc, held in shadow, so the circle never breaks -->
+  <circle class="night shadowDisc" cx="50" cy="50" r="24" fill="#342B4F" opacity="0"/>
+
+  <!-- the lit crescent riding on top of it -->
+  <g class="night" mask="url(#phaseMask)" opacity="0">
+    <circle class="moonBody" cx="50" cy="50" r="24" fill="#DCE5F2"/>
+    <g class="craters" fill="#B6C4DC">
+      <circle cx="42" cy="41" r="5"/>
+      <circle cx="59" cy="53" r="3.4"/>
+      <circle cx="45" cy="59" r="2.4"/>
+    </g>
+  </g>
+
+  <circle class="sunDisc" cx="50" cy="50" r="24" fill="#F2A33C"/>
+</svg>

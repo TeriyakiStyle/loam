@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="237 85 141 38" width="141" height="38">
+  <title>LOAM</title>
+  <!-- Monoline centrelines traced from the original artwork.
+       Flat caps sit on y=88, round shapes overshoot to 87 and 121, baseline y=120.
+       A and M are built from arches, not diagonals. Kerning is the original's. -->
+  <g fill="none" stroke="currentColor" stroke-width="1.2"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M239,88 V120 H261"/>
+    <circle cx="278.4" cy="104.1" r="16.8"/>
+    <path d="M302,120 V99 A13,12 0 0 1 328,99 V120"/>
+    <path d="M302,108 H328"/>
+    <path d="M335,120 V96 A10,9 0 0 1 355,96 V120"/>
+    <path d="M355,96 A10,9 0 0 1 375,96 V120"/>
+  </g>
+</svg>
