@@ -390,3 +390,22 @@ button.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px;
 }
 .ghost:hover { opacity: 1; }
 .ghost:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* The wordmark returns in the slot the rock just left. */
+.finale-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(88px, 17vmin, 126px);
+  height: auto;
+  transform: translate(-50%, -50%) translateY(calc(var(--ring) * -1));
+  opacity: 0;
+  transition: opacity 1100ms ease;
+  pointer-events: none;
+}
+.finale-mark.is-in { opacity: 1; }
+
+/* Once it's finished, the loam is the way onward. */
+.stage.is-done a.piece[data-at="centre"] { cursor: pointer; }
+.stage.is-done a.piece[data-at="centre"]:hover { --s: 1.05; }
+a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }

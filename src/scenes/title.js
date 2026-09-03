@@ -14,7 +14,7 @@ export function render(el, _store) {
     <section class="title-scene">
       <img class="wordmark" src="assets/wordmark-loam.svg" alt="LOAM" width="141" height="38">
 
-      <a class="cube-link" href="#/field" aria-label="Enter">
+      <a class="cube-link" href="#/physical" aria-label="Enter">
         ${cubeSVG(SOILS.loam, 256)}
       </a>
 

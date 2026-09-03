@@ -56,12 +56,19 @@ const RUNTIME = 28.4;   // used only when there's no audio to follow
 
 // --- markup ----------------------------------------------------------------
 
+// The rock starts the sequence and the loam ends it, so those two are real
+// controls; everything in between is scenery.
+const TAGS  = { rock: 'button', loam: 'a' };
+const ATTRS = {
+  rock: ' type="button" data-start aria-label="Break the rock and begin"',
+  loam: ' href="#/biological" data-next tabindex="-1"'
+      + ' aria-label="Continue to Biological"',
+};
+
 function pieceHTML(id) {
   const p = PIECES[id];
-  const tag = id === 'rock' ? 'button' : 'div';
-  const attrs = id === 'rock'
-    ? ' type="button" data-start aria-label="Break the rock and begin"'
-    : ' aria-hidden="true"';
+  const tag = TAGS[id] || 'div';
+  const attrs = ATTRS[id] || ' aria-hidden="true"';
   return `<${tag} class="piece" data-piece="${id}" style="--art:${p.scale}"${attrs}>
         <img src="${p.src}" alt="" draggable="false">
         <span class="piece-label">${p.label}</span>
@@ -73,6 +80,8 @@ export function render(el, _store) {
     <section class="physical">
       <div class="stage" data-stage>
         ${Object.keys(PIECES).map(pieceHTML).join('\n        ')}
+        <img class="finale-mark" data-mark src="assets/wordmark-loam.svg"
+             alt="LOAM" width="141" height="38">
       </div>
 
       <p class="hint" data-hint>Click the rock to begin.</p>
@@ -90,6 +99,8 @@ export function render(el, _store) {
   const muteBtn  = el.querySelector('[data-mute]');
   const replay   = el.querySelector('[data-replay]');
   const startBtn = el.querySelector('[data-start]');
+  const wordmark = el.querySelector('[data-mark]');
+  const nextLink = el.querySelector('[data-next]');
   const piece    = id => stage.querySelector(`[data-piece="${id}"]`);
 
   const audio = new Audio(NARRATION);
@@ -128,9 +139,13 @@ export function render(el, _store) {
     place('rock', 'centre');
     piece('rock').dataset.at = 'centre';
     fired = 0;
+    hint.textContent = 'Click the rock to begin.';
     hint.hidden = false;
     replay.hidden = true;
     startBtn.disabled = false;
+    wordmark.classList.remove('is-in');
+    stage.classList.remove('is-done', 'is-chemical', 'is-combining');
+    nextLink.setAttribute('tabindex', '-1');
   }
 
   // --- the cue actions --------------------------------------------------
@@ -146,12 +161,18 @@ export function render(el, _store) {
     unmark()   { for (const id of ['sand', 'silt', 'clay']) mark(id, false); },
     combine()  { stage.classList.add('is-combining');
                  for (const id of ['sand', 'silt', 'clay']) place(id, 'centre'); },
-    loam()     { for (const id of ['sand', 'silt', 'clay']) {
+    // The rock goes too: once there is loam, the parent is spent.
+    loam()     { for (const id of ['sand', 'silt', 'clay', 'rock']) {
                    piece(id).dataset.at = 'away';
                  }
                  place('loam', 'centre');
-                 stage.classList.remove('is-combining'); },
-    done()     { replay.hidden = false; },
+                 stage.classList.remove('is-combining');
+                 wordmark.classList.add('is-in'); },
+    done()     { replay.hidden = false;
+                 nextLink.removeAttribute('tabindex');
+                 stage.classList.add('is-done');
+                 hint.textContent = 'Click to continue';
+                 hint.hidden = false; },
   };
 
   // --- the clock --------------------------------------------------------
