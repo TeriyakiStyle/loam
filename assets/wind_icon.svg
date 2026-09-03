@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <!-- upper gust: broad sweep into a spiral -->
+    <path d="M70 196
+             C122 142, 181 142, 238 164
+             C300 188, 345 207, 394 184
+             C435 165, 456 128, 438 104
+             C421 82, 385 87, 374 108
+             C365 125, 377 143, 394 142"
+          stroke-width="15"/>
+
+    <!-- central gust -->
+    <path d="M45 264
+             C108 211, 174 220, 230 242
+             C291 266, 343 282, 401 258
+             C436 244, 461 224, 475 204"
+          stroke-width="13"/>
+
+    <!-- lower gust into a small spiral -->
+    <path d="M94 344
+             C143 299, 193 302, 244 327
+             C295 352, 341 372, 386 357
+             C421 345, 435 317, 423 300
+             C413 285, 387 286, 376 301
+             C367 314, 376 328, 390 328"
+          stroke-width="14"/>
+  </g>
+
+  <!-- subtle tapered terminals, giving the strokes a drawn/calligraphic finish -->
+  <g fill="currentColor">
+    <path d="M70 196 C82 184 92 177 105 172 C94 181 84 190 74 203 Z"/>
+    <path d="M45 264 C57 253 68 245 82 240 C69 250 58 260 48 271 Z"/>
+    <path d="M94 344 C105 333 115 327 128 322 C116 331 107 340 98 350 Z"/>
+  </g>
+</svg>

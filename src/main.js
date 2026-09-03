@@ -7,24 +7,35 @@
 
 import { createStore, reduce, initialState } from './engine.js';
 import { createRouter } from './router.js';
+import { navHTML, wireNav } from './ui/nav.js';
 import * as title from './scenes/title.js';
 import * as field from './scenes/field.js';
+import * as contact from './scenes/contact.js';
 
 const routes = {
-  '/':      title,
-  '/field': field,
+  '/':        { scene: title,   name: 'LOAM',           bar: false },
+  '/field':   { scene: field,   name: 'LOAM — Field',   bar: true  },
+  '/contact': { scene: contact, name: 'LOAM — Contact', bar: true  },
 };
 
 const store  = createStore(reduce, initialState);
 const router = createRouter(routes, '/');
 const root   = document.getElementById('app');
+const header = document.getElementById('nav');
+
+// The bar is built once and simply hidden on the title page, so its dropdowns
+// don't have to be rewired every time you change screens.
+header.innerHTML = navHTML();
+wireNav(header);
 
 let cleanup = null;
 
 function show(path) {
-  if (cleanup) cleanup();               // let the old scene put itself away
-  cleanup = routes[path].render(root, store);
-  document.title = path === '/' ? 'LOAM' : 'LOAM — Field';
+  const route = routes[path];
+  if (cleanup) cleanup();                 // let the old scene put itself away
+  cleanup = route.scene.render(root, store);
+  header.hidden = !route.bar;
+  document.title = route.name;
 }
 
 router.onChange(show);

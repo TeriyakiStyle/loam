@@ -7,6 +7,9 @@
   --turf:   #6B8E23;
   --shade:  #3E2723;
   --sunlit: #D6B18D;
+  --bar:    #C8A894;   /* the nav band, a shade above the ground */
+  --panel:  #D6BFB0;   /* dropdown surface */
+  --line:   rgba(26, 18, 14, 0.16);
   --step:   clamp(1rem, 3vw, 2rem);
 }
 
@@ -15,15 +18,20 @@
 body {
   margin: 0;
   min-height: 100svh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
   background: var(--ground);
   color: var(--ink);
   font: 400 1rem/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-#app { width: 100%; }
+#app {
+  flex: 1;
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
 
 .title-scene,
 .field-scene {
@@ -108,3 +116,104 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+
+/* --------------------------------------------------------------------------
+   NAV BAR — every screen except the title page
+   -------------------------------------------------------------------------- */
+#nav { position: sticky; top: 0; z-index: 10; }
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0 clamp(1rem, 4vw, 2.75rem);
+  min-height: 66px;
+  background: var(--bar);
+  border-bottom: 1px solid var(--line);
+}
+
+.bar-home { display: flex; align-items: center; border-radius: 4px; }
+.bar-home img { width: auto; height: 21px; display: block; }
+
+.bar-items {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2.5vw, 2rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bar-item { position: relative; }
+
+.bar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.82;
+  transition: opacity 140ms ease;
+}
+.bar-link:hover { opacity: 1; }
+
+.chev { width: 11px; height: 8px; transition: transform 180ms ease; }
+[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+/* --- dropdown --- */
+.bar-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  min-width: max-content;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(26, 18, 14, 0.16);
+}
+
+.bar-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+.bar-menu a:hover { background: rgba(26, 18, 14, 0.07); opacity: 1; }
+.ext { width: 11px; height: 11px; opacity: 0.55; flex: none; }
+
+.bar-link:focus-visible,
+.bar-home:focus-visible,
+.bar-menu a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* --------------------------------------------------------------------------
+   Simple interior pages
+   -------------------------------------------------------------------------- */
+.page {
+  max-width: 60ch;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  text-align: left;
+}
+.page h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.placeholder { margin: 0; opacity: 0.6; }
