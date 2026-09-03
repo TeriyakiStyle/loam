@@ -1,15 +1,26 @@
 // ---------------------------------------------------------------------------
 // NAV BAR
 //
-// Shown on every screen except the title page. Two items for now; adding a
-// third is one entry in MENU below.
+// Shown on every screen except the title page.
 //
-// A menu with children is a <button> that opens a list. A menu without them
-// is a plain link. That distinction is what makes it work with a keyboard
-// and a screen reader without any extra code.
+// SECTIONS are the game itself — each leads to its own sequence.
+// UTILITY is everything else, kept visually apart so it doesn't compete.
+//
+// An entry with `items` becomes a dropdown; an entry with `href` is a plain
+// link. That distinction is what makes it work with a keyboard and a screen
+// reader without any extra code.
 // ---------------------------------------------------------------------------
 
-const MENU = [
+import { cubeSVG, SOILS } from '../art/cube.js';
+
+const SECTIONS = [
+  { label: 'Physical',   href: '#/physical' },
+  { label: 'Biological', href: '#/biological' },
+  { label: 'Chemical',   href: '#/chemical' },
+  { label: 'Sow',        href: '#/sow' },
+];
+
+const UTILITY = [
   {
     label: 'Resources',
     items: [
@@ -56,10 +67,13 @@ export function navHTML() {
   return `
     <nav class="bar" aria-label="Main">
       <a class="bar-home" href="#/" aria-label="LOAM — front page">
-        <img src="assets/wordmark-loam.svg" alt="LOAM" width="141" height="38">
+        ${cubeSVG(SOILS.loam, 34)}
       </a>
-      <ul class="bar-items">
-        ${MENU.map(itemHTML).join('\n        ')}
+      <ul class="bar-items bar-sections">
+        ${SECTIONS.map(itemHTML).join('\n        ')}
+      </ul>
+      <ul class="bar-items bar-utility">
+        ${UTILITY.map((entry, i) => itemHTML(entry, `u${i}`)).join('\n        ')}
       </ul>
     </nav>`;
 }
@@ -120,4 +134,14 @@ export function wireNav(root) {
     document.removeEventListener('keydown', onKeydown);
     root.removeEventListener('focusout', onFocusOut);
   };
+}
+
+// Marks the current section in the bar so you can see where you are.
+export function setActive(root, path) {
+  root.querySelectorAll('.bar-link[href]').forEach(link => {
+    const isCurrent = link.getAttribute('href') === `#${path}`;
+    link.classList.toggle('is-active', isCurrent);
+    if (isCurrent) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
 }

@@ -7,15 +7,27 @@
 
 import { createStore, reduce, initialState } from './engine.js';
 import { createRouter } from './router.js';
-import { navHTML, wireNav } from './ui/nav.js';
+import { navHTML, wireNav, setActive } from './ui/nav.js';
+import { section } from './scenes/section.js';
 import * as title from './scenes/title.js';
 import * as field from './scenes/field.js';
 import * as contact from './scenes/contact.js';
 
 const routes = {
-  '/':        { scene: title,   name: 'LOAM',           bar: false },
-  '/field':   { scene: field,   name: 'LOAM — Field',   bar: true  },
-  '/contact': { scene: contact, name: 'LOAM — Contact', bar: true  },
+  '/':           { scene: title,   name: 'LOAM',              bar: false },
+  '/field':      { scene: field,   name: 'LOAM — Field',      bar: true  },
+
+  '/physical':   { scene: section('Physical',
+                     'The formation of loam from parent rock.'),
+                                   name: 'LOAM — Physical',   bar: true  },
+  '/biological': { scene: section('Biological'),
+                                   name: 'LOAM — Biological', bar: true  },
+  '/chemical':   { scene: section('Chemical'),
+                                   name: 'LOAM — Chemical',   bar: true  },
+  '/sow':        { scene: section('Sow'),
+                                   name: 'LOAM — Sow',        bar: true  },
+
+  '/contact':    { scene: contact, name: 'LOAM — Contact',    bar: true  },
 };
 
 const store  = createStore(reduce, initialState);
@@ -35,6 +47,7 @@ function show(path) {
   if (cleanup) cleanup();                 // let the old scene put itself away
   cleanup = route.scene.render(root, store);
   header.hidden = !route.bar;
+  setActive(header, path);
   document.title = route.name;
 }
 
