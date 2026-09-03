@@ -28,30 +28,37 @@ const PIECES = {
 // there: it's the parent, not an ingredient.
 const SLOTS = { rock: 0, sand: 1, silt: 2, clay: 3 };
 
-// Cue times in seconds, read against the narration.
-//   0.0  "Soil begins with its texture."
-//   3.2  "Over millennia, bedrock weathers into ever-smaller particles:"
-//   7.9  "coarse sand, and fine silt."
-//   9.9  "Lastly there is clay, not broken down but chemically remade."
-//  12.9  "The smallest particle, and the greatest change."
-//  16.3  "Each size — gritty, silky, sticky — handles water, air and nutrients…"
-//  23.0  "When blended in the right ratios,"
-//  25.5  "they create a balanced medium in which life will thrive."
+// Cue times in seconds, read against the narration. The phrase boundaries
+// below came from the silence gaps in the mp3 itself, so if you re-record,
+// re-derive them rather than guessing:
+//
+//   ffmpeg -i PhysicalNarration.001.mp3 -af silencedetect=noise=-32dB:d=0.30 -f null -
+//
+//   0.00  "Soil begins with its texture."
+//   2.39  "Over millennia,"
+//   3.72  "bedrock weathers into ever-smaller particles:"
+//   6.54  "coarse sand,"      7.67  "and fine silt."
+//   9.34  "Lastly there is clay,"
+//  10.88  "not broken down"   12.33  "but chemically remade."
+//  14.30  "The smallest particle,"  15.88  "and the greatest change."
+//  17.71  "Each size"         18.90  "from gritty to silky to sticky"
+//  22.16  "handles water,"  23.76 "air,"  24.55 "and nutrients differently."
+//  27.13  "When blended in the right ratios,"
+//  29.84  "they create a balanced medium"
+//  32.47  "in which life will thrive."          (ends 34.23, file 34.72)
 const CUES = [
-  { t:  4.6, act: 'break'      },   // rock -> sand
-  { t:  8.7, act: 'toSilt'     },
-  { t: 10.3, act: 'toClay'     },   // the slow one: chemistry, not impact
-  { t: 13.2, act: 'clayOut'    },   // clay joins the ring, centre clears
-  { t: 17.7, act: 'markSand'   },   // "gritty"
-  { t: 19.1, act: 'markSilt'   },   // "silky"
-  { t: 20.6, act: 'markClay'   },   // "sticky"
-  { t: 22.3, act: 'unmark'     },
-  { t: 23.2, act: 'combine'    },   // the three converge on the centre
-  { t: 25.6, act: 'loam'       },
-  { t: 27.9, act: 'done'       },
+  { t:  4.0, act: 'break'    },   // on "weathers into ever-smaller particles"
+  { t:  7.6, act: 'toSilt'   },   // as silt is named
+  { t:  9.3, act: 'toClay'   },   // the slow one: chemistry, not impact
+  { t: 17.0, act: 'clayOut'  },   // clay held the centre through its two lines
+  { t: 19.2, act: 'markSand' },   // "gritty"
+  { t: 20.1, act: 'markSilt' },   // "silky"
+  { t: 20.9, act: 'markClay' },   // "sticky"
+  { t: 21.9, act: 'unmark'   },
+  { t: 27.2, act: 'combine'  },   // "When blended"
+  { t: 29.9, act: 'loam'     },   // "they create a balanced medium"
+  { t: 34.3, act: 'done'     },
 ];
-
-const RUNTIME = 28.4;   // used only when there's no audio to follow
 
 
 // --- markup ----------------------------------------------------------------
