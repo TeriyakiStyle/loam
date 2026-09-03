@@ -12,14 +12,13 @@ import { section } from './scenes/section.js';
 import * as title from './scenes/title.js';
 import * as field from './scenes/field.js';
 import * as contact from './scenes/contact.js';
+import * as physical from './scenes/physical.js';
 
 const routes = {
   '/':           { scene: title,   name: 'LOAM',              bar: false },
   '/field':      { scene: field,   name: 'LOAM — Field',      bar: true  },
 
-  '/physical':   { scene: section('Physical',
-                     'The formation of loam from parent rock.'),
-                                   name: 'LOAM — Physical',   bar: true  },
+  '/physical':   { scene: physical, name: 'LOAM — Physical',   bar: true  },
   '/biological': { scene: section('Biological'),
                                    name: 'LOAM — Biological', bar: true  },
   '/chemical':   { scene: section('Chemical'),

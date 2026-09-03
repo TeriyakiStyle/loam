@@ -276,3 +276,117 @@ body {
   .bar-arrow svg { width: 12px; }
   .bar-menu { right: 0; left: auto; }
 }
+
+/* --------------------------------------------------------------------------
+   PHYSICAL — the rock-to-loam sequence
+   -------------------------------------------------------------------------- */
+.physical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(0.5rem, 2vh, 1.5rem) 1rem 2rem;
+}
+
+.stage {
+  --ring: clamp(112px, 26vmin, 178px);   /* how far the ring sits from centre */
+  --piece: clamp(96px, 22vmin, 150px);   /* the box each drawing fits inside  */
+  position: relative;
+  width:  calc(var(--ring) * 2 + var(--piece) * 1.5);
+  height: calc(var(--ring) * 2 + var(--piece) * 1.5);
+  max-width: 100%;
+}
+
+/* Every piece is placed the same way: a unit direction times the ring radius.
+   Moving between centre and ring is then just a change of two numbers, and
+   the transition does the animating. */
+.piece {
+  --dx: 0; --dy: 0;
+  --art: 1;   /* the drawing's own scale, set per asset in physical.js */
+  --s: 1;     /* the state scale: centre, ring, marked */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--piece);
+  height: var(--piece);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  transform:
+    translate(-50%, -50%)
+    translate(calc(var(--dx) * var(--ring)), calc(var(--dy) * var(--ring)))
+    scale(calc(var(--art) * var(--s)));
+  transition: transform 900ms cubic-bezier(.22,.61,.36,1),
+              opacity 700ms ease,
+              filter 400ms ease;
+}
+
+.piece img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+}
+
+/* what the piece is doing right now */
+.piece[data-at="away"]   { opacity: 0; pointer-events: none; }
+.piece[data-at="centre"] { opacity: 1; z-index: 2; }
+.piece[data-at="ring"]   { opacity: 1; z-index: 1; --s: 0.62; }
+
+/* the rock is the only one you can click, and only before it breaks */
+button.piece { cursor: pointer; }
+button.piece[disabled] { cursor: default; }
+button.piece:not([disabled]):hover { --s: 1.04; }
+button.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
+
+.piece-label {
+  position: absolute;
+  bottom: -1.7rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.piece[data-at="ring"] .piece-label { opacity: 0.5; }
+.piece.is-marked .piece-label { opacity: 1; }
+.piece.is-marked { filter: drop-shadow(0 3px 10px rgba(26,18,14,.28)); --s: 0.74; }
+
+/* the chemical step reads differently: slower, and it settles rather than lands */
+.stage.is-chemical .piece[data-at="centre"] {
+  transition: transform 1700ms cubic-bezier(.33,.9,.29,1), opacity 1200ms ease;
+}
+.stage.is-combining .piece { transition-duration: 1500ms, 1100ms, 400ms; }
+
+.hint {
+  margin: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.seq-controls { display: flex; gap: 0.75rem; }
+.ghost {
+  font: inherit;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink);
+  opacity: 0.6;
+  cursor: pointer;
+}
+.ghost:hover { opacity: 1; }
+.ghost:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
