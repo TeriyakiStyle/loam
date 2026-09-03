@@ -27,6 +27,8 @@ const routes = {
   '/sow':        { scene: section('Sow'),
                                    name: 'LOAM — Sow',        bar: true  },
 
+  '/about':      { scene: section('About', '', 'Nothing here yet.'),
+                                   name: 'LOAM — About',      bar: true  },
   '/contact':    { scene: contact, name: 'LOAM — Contact',    bar: true  },
 };
 

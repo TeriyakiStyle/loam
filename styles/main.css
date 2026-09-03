@@ -147,6 +147,7 @@ body {
    and it scrolls inside itself rather than making the page scroll. */
 .bar-sections {
   flex: 1;
+  gap: clamp(0.5rem, 1.4vw, 1.1rem);
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
@@ -154,6 +155,18 @@ body {
 }
 .bar-sections::-webkit-scrollbar { display: none; }
 .bar-utility { opacity: 0.72; flex: none; }
+
+/* An ordered list carries the sequence for screen readers; the arrows say the
+   same thing to everyone else. */
+.bar-sections { counter-reset: none; list-style: none; }
+
+.bar-arrow {
+  display: flex;
+  align-items: center;
+  flex: none;
+  opacity: 0.38;
+}
+.bar-arrow svg { width: 16px; height: 8px; display: block; }
 
 .bar-items {
   display: flex;
@@ -257,7 +270,9 @@ body {
     min-height: 58px;
   }
   .bar-home .cube { width: 28px; height: 28px; }
-  .bar-items { gap: 0.85rem; }
+  .bar-items { gap: 0.7rem; }
+  .bar-sections { gap: 0.5rem; }
   .bar-link { font-size: 0.85rem; padding: 0.5rem 0.1rem; }
+  .bar-arrow svg { width: 12px; }
   .bar-menu { right: 0; left: auto; }
 }

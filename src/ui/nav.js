@@ -21,6 +21,7 @@ const SECTIONS = [
 ];
 
 const UTILITY = [
+  { label: 'About', href: '#/about' },
   {
     label: 'Resources',
     items: [
@@ -29,6 +30,14 @@ const UTILITY = [
   },
   { label: 'Contact', href: '#/contact' },
 ];
+
+// Purely decorative: it says "these run in order" and nothing else, so it is
+// hidden from screen readers — the <ol> already carries that meaning for them.
+const ARROW = `<li class="bar-arrow" aria-hidden="true">
+        <svg viewBox="0 0 14 8"><path d="M0.5 4h12M9.5 1l3 3-3 3"
+             fill="none" stroke="currentColor" stroke-width="1.2"
+             stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </li>`;
 
 const CHEVRON = `<svg class="chev" viewBox="0 0 12 8" aria-hidden="true">
     <path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor"
@@ -69,9 +78,9 @@ export function navHTML() {
       <a class="bar-home" href="#/" aria-label="LOAM — front page">
         ${cubeSVG(SOILS.loam, 34)}
       </a>
-      <ul class="bar-items bar-sections">
-        ${SECTIONS.map(itemHTML).join('\n        ')}
-      </ul>
+      <ol class="bar-items bar-sections">
+        ${SECTIONS.map(itemHTML).join('\n        ' + ARROW + '\n        ')}
+      </ol>
       <ul class="bar-items bar-utility">
         ${UTILITY.map((entry, i) => itemHTML(entry, `u${i}`)).join('\n        ')}
       </ul>
