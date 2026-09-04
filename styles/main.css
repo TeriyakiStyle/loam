@@ -298,6 +298,16 @@ body {
 .lede { margin: 0 0 0.5rem; opacity: 0.85; }
 .placeholder { margin: 0; opacity: 0.55; font-size: 0.9rem; }
 
+/* Middle widths: the two groups meet before the mobile rules would help, and
+   a clipped "Sow and Grow" butting against "About" reads as a collision.
+   Tighten the type and the gaps just enough for both groups to fit. */
+@media (max-width: 1040px) {
+  .bar { gap: 1.25rem; padding: 0 1.25rem; }
+  .bar-items { gap: 0.9rem; }
+  .bar-link { font-size: 0.9rem; }
+  .bar-arrow { margin: 0 -0.1rem; }
+}
+
 /* Narrow screens: tighter bar, smaller labels, sections scroll if needed. */
 @media (max-width: 620px) {
   .bar {
@@ -325,9 +335,17 @@ body {
 }
 
 .stage {
-  --ring: clamp(112px, 26vmin, 178px);   /* how far the ring sits from centre */
+  /* Ring and piece trade against each other: a wider ring with slightly
+     smaller artwork buys air between the centre and the pieces around it
+     without making the stage taller.
+
+     The `32vh - 76px` term is what keeps a laptop honest. The stage is about
+     3 ring-radii tall, and the column above and below it (bar, subtitle,
+     controls) costs roughly 230px, so on a short screen the ring has to give
+     way or the page starts scrolling mid-sequence. */
+  --ring: clamp(112px, min(28vmin, 32vh - 76px), 196px);
+  --piece: calc(var(--ring) * 0.694);    /* the box each drawing fits inside  */
   --label-gap: 2.3rem;                   /* label distance below the artwork  */
-  --piece: clamp(96px, 22vmin, 150px);   /* the box each drawing fits inside  */
   position: relative;
   width:  calc(var(--ring) * 2 + var(--piece) * 1.5);
   height: calc(var(--ring) * 2 + var(--piece) * 1.5);

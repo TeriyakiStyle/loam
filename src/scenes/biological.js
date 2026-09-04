@@ -7,14 +7,19 @@
 // Timing lives in ui/runner.js; the stage vocabulary in ui/stage.js.
 // ---------------------------------------------------------------------------
 
-import { createRunner } from '../ui/runner.js';
+import { createRunner, handOff, takeHandoff } from '../ui/runner.js';
 import { pieceHTML, stageOps } from '../ui/stage.js';
 
 const NARRATION = 'assets/a_biological/organicnarration.001.mp3';
 const DIR = 'assets/a_biological/';
 
+// How long a handed-off scene waits before it starts talking.
+const HANDOFF_BEAT = 550;
+
+// The loam carries no label here — it arrived from Physical already named,
+// and the label only crowds the pile it's waiting above.
 const PIECES = {
-  loam:   { src: DIR + 'startingloam.svg',      label: 'Loam',              scale: 1.00 },
+  loam:   { src: DIR + 'startingloam.svg',      label: '',                  scale: 1.00 },
   brown:  { src: DIR + 'brownfoodcube.svg',     label: 'Browns · carbon',   scale: 0.95 },
   green:  { src: DIR + 'greenfoodcube.svg',     label: 'Greens · nitrogen', scale: 0.95 },
   water:  { src: DIR + 'watercube.svg',         label: 'Water',             scale: 0.88 },
@@ -187,6 +192,7 @@ export function render(el, _store) {
   }
 
   startBtn.addEventListener('click', start);
+  nextLink.addEventListener('click', handOff);
   muteBtn.addEventListener('click', () => {
     const muted = runner.toggleMute();
     muteBtn.setAttribute('aria-pressed', String(muted));
@@ -195,5 +201,10 @@ export function render(el, _store) {
   replay.addEventListener('click', () => { reset(); runner.rewind(); start(); });
 
   reset();
-  return () => runner.stop();
+
+  // Arriving from Physical: play on, after a beat to let the screen settle
+  // rather than talking over its own arrival.
+  const opening = takeHandoff() ? setTimeout(start, HANDOFF_BEAT) : null;
+
+  return () => { clearTimeout(opening); runner.stop(); };
 }

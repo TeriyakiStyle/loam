@@ -15,6 +15,22 @@
 // rather than freezing at zero.
 const GRACE = 1.5;
 
+// ---------------------------------------------------------------------------
+// HANDOFF
+//
+// One sequence ending and the next beginning is a single move for the viewer:
+// they click the finished cube and the next chapter plays. That click is also
+// the user gesture a browser needs before it will let audio play, and it
+// survives the hash change, so the arriving scene can start itself.
+//
+// Set on the way out, read once on the way in. A page opened cold — a refresh,
+// a bookmark, a link from the nav — finds this false and waits to be clicked,
+// which is right: nobody wants a voice starting at them unbidden.
+// ---------------------------------------------------------------------------
+let handed = false;
+export function handOff() { handed = true; }
+export function takeHandoff() { const h = handed; handed = false; return h; }
+
 export function createRunner({
   src,                  // narration url
   cues,                 // [{ t, act }] sorted by t

@@ -5,10 +5,13 @@
 // is only the cast, the cue times, and what each cue does.
 // ---------------------------------------------------------------------------
 
-import { createRunner } from '../ui/runner.js';
+import { createRunner, handOff, takeHandoff } from '../ui/runner.js';
 import { pieceHTML, stageOps } from '../ui/stage.js';
 
 const NARRATION = 'assets/PhysicalNarration.001.mp3';
+
+// How long a handed-off scene waits before it starts talking.
+const HANDOFF_BEAT = 550;
 
 // `scale` normalises artwork with very different proportions: the rock is
 // tall, the piles are wide and flat, clay is small. Nudge these to taste.
@@ -158,6 +161,7 @@ export function render(el, _store) {
   }
 
   startBtn.addEventListener('click', start);
+  nextLink.addEventListener('click', handOff);
   muteBtn.addEventListener('click', () => {
     const muted = runner.toggleMute();
     muteBtn.setAttribute('aria-pressed', String(muted));
@@ -166,5 +170,10 @@ export function render(el, _store) {
   replay.addEventListener('click', () => { reset(); runner.rewind(); start(); });
 
   reset();
-  return () => runner.stop();
+
+  // Arriving from the previous chapter: play on, after a beat to let the
+  // screen settle rather than talking over its own arrival.
+  const opening = takeHandoff() ? setTimeout(start, HANDOFF_BEAT) : null;
+
+  return () => { clearTimeout(opening); runner.stop(); };
 }
