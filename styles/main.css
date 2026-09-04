@@ -316,7 +316,7 @@ body {
 /* --------------------------------------------------------------------------
    PHYSICAL — the rock-to-loam sequence
    -------------------------------------------------------------------------- */
-.physical {
+.sequence {
   display: flex;
   flex-direction: column;
   align-items: center;

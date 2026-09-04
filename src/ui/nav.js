@@ -14,14 +14,22 @@
 import { cubeSVG, SOILS } from '../art/cube.js';
 
 const SECTIONS = [
-  { label: 'Physical',   href: '#/physical' },
-  { label: 'Biological', href: '#/biological' },
-  { label: 'Chemical',   href: '#/chemical' },
-  { label: 'Sow',        href: '#/sow' },
+  { label: 'Physical',     href: '#/physical' },
+  { label: 'Biological',   href: '#/biological' },
+  { label: 'Sow and Grow', href: '#/sow' },
 ];
 
 const UTILITY = [
   { label: 'About', href: '#/about' },
+  {
+    // Reference material. These two are a guess at what belongs here —
+    // rename or replace the list, the markup follows it.
+    label: 'Appendix',
+    items: [
+      { label: 'The texture triangle', href: '#/texture-triangle' },
+      { label: 'Soil components',      href: '#/soil-components' },
+    ],
+  },
   {
     label: 'Resources',
     items: [

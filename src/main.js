@@ -13,18 +13,23 @@ import * as title from './scenes/title.js';
 import * as field from './scenes/field.js';
 import * as contact from './scenes/contact.js';
 import * as physical from './scenes/physical.js';
+import * as biological from './scenes/biological.js';
 
 const routes = {
   '/':           { scene: title,   name: 'LOAM',              bar: false },
   '/field':      { scene: field,   name: 'LOAM — Field',      bar: true  },
 
   '/physical':   { scene: physical, name: 'LOAM — Physical',   bar: true  },
-  '/biological': { scene: section('Biological'),
-                                   name: 'LOAM — Biological', bar: true  },
-  '/chemical':   { scene: section('Chemical'),
-                                   name: 'LOAM — Chemical',   bar: true  },
-  '/sow':        { scene: section('Sow'),
-                                   name: 'LOAM — Sow',        bar: true  },
+  '/biological': { scene: biological, name: 'LOAM — Biological', bar: true },
+  '/sow':        { scene: section('Sow and Grow'),
+                                   name: 'LOAM — Sow and Grow', bar: true },
+
+  '/texture-triangle': { scene: section('The texture triangle', '',
+                           'Nothing here yet.'),
+                                   name: 'LOAM — Texture triangle', bar: true },
+  '/soil-components':  { scene: section('Soil components', '',
+                           'Nothing here yet.'),
+                                   name: 'LOAM — Soil components',  bar: true },
 
   '/about':      { scene: section('About', '', 'Nothing here yet.'),
                                    name: 'LOAM — About',      bar: true  },
