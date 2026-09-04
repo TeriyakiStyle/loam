@@ -502,3 +502,5 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   transition: opacity 260ms ease;
 }
 .subtitle.is-in { opacity: 0.9; }
+/* the closing line leaves more slowly than a mid-sequence line change */
+.subtitle.is-closing { transition-duration: 1100ms; }

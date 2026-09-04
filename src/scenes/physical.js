@@ -76,8 +76,10 @@ const SUBS = [
   { t: 22.16, text: 'handles water, air, and nutrients differently.' },
   { t: 27.13, text: 'When blended in the right ratios,' },
   { t: 29.84, text: 'they create a balanced medium in which life will thrive.' },
-  { t: 34.40, text: '' },
 ];
+
+// How long the closing line holds after the narration stops, before it fades.
+const SUB_LINGER = 1200;
 
 
 // --- markup ----------------------------------------------------------------
@@ -133,6 +135,7 @@ export function render(el, _store) {
   audio.preload = 'auto';
 
   let raf = null, fired = 0, startedAt = 0, alive = true;
+  let subTimer = null;      // the closing fade
   let subAt = -1;           // which subtitle line is currently showing
   let useAudio = true;      // still hoping to follow the narration
   let audioLive = false;    // the narration is genuinely playing
@@ -167,8 +170,9 @@ export function render(el, _store) {
     piece('rock').dataset.at = 'centre';
     fired = 0;
     subAt = -1;
+    clearTimeout(subTimer);
     sub.textContent = '';
-    sub.classList.remove('is-in');
+    sub.classList.remove('is-in', 'is-closing');
     replay.classList.remove('is-ready');
     controls.classList.remove('is-open');
     replay.disabled = true;
@@ -198,7 +202,12 @@ export function render(el, _store) {
                  place('loam', 'centre');
                  stage.classList.remove('is-combining');
                  wordmark.classList.add('is-in'); },
-    done()     { replay.classList.add('is-ready');
+    done()     { clearTimeout(subTimer);
+                 subTimer = setTimeout(() => {
+                   sub.classList.add('is-closing');   // a slower fade than a line change
+                   sub.classList.remove('is-in');
+                 }, SUB_LINGER);
+                 replay.classList.add('is-ready');
                  controls.classList.add('is-open');
                  replay.disabled = false;
                  nextLink.removeAttribute('tabindex');
@@ -278,6 +287,7 @@ export function render(el, _store) {
   // follows you to the next screen.
   return () => {
     alive = false;
+    clearTimeout(subTimer);
     cancelAnimationFrame(raf);
     audio.pause();
     audio.src = '';
