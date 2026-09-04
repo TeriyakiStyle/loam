@@ -1,17 +1,52 @@
 /* --------------------------------------------------------------------------
    All colour lives here, once. Change a value and it changes everywhere.
    -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+   COLOUR SCRIPT
+   Each section gets its own ground. Everything else — the nav band, the
+   dropdown, the hairlines, the ink — is derived from it, so a page is five
+   values and nothing else needs touching.
+
+   On a dark ground the ink has to go light or the type disappears, which is
+   why --ink is part of each set rather than a global.
+   -------------------------------------------------------------------------- */
 :root {
+  /* the default: warm tan. Title, Physical, and anything not listed below. */
   --ground: #C09C85;
-  --ink:    #000000;
-  --turf:   #6B8E23;
-  --shade:  #3E2723;
-  --sunlit: #D6B18D;
+  --ink:    #1A120E;
   --bar:    #C8A894;   /* the nav band, a shade above the ground */
   --panel:  #D6BFB0;   /* dropdown surface */
   --line:   rgba(26, 18, 14, 0.16);
+  --hover:  rgba(26, 18, 14, 0.07);
+
+  /* fixed regardless of page — the loam cube is the mark */
+  --turf:   #6B8E23;
+  --shade:  #3E2723;
+  --sunlit: #D6B18D;
   --step:   clamp(1rem, 3vw, 2rem);
 }
+
+/* Biological — a richer chocolate. */
+body[data-page="biological"] {
+  --ground: #57392A;
+  --ink:    #F2E6DA;
+  --bar:    #654532;
+  --panel:  #76543F;
+  --line:   rgba(242, 230, 218, 0.20);
+  --hover:  rgba(242, 230, 218, 0.10);
+}
+
+/* Sow — warm green. A starting point, not a decision: swap these freely. */
+body[data-page="sow"] {
+  --ground: #566435;
+  --ink:    #F5F1E2;
+  --bar:    #5D6B3A;
+  --panel:  #6B7A46;
+  --line:   rgba(245, 241, 226, 0.20);
+  --hover:  rgba(245, 241, 226, 0.10);
+}
+
+/* Chemical — still on the default. Add a block here when you know its colour. */
 
 * { box-sizing: border-box; }
 
@@ -124,6 +159,7 @@ body {
 #nav { position: sticky; top: 0; z-index: 10; }
 
 .bar {
+  transition: background-color 300ms ease, border-color 300ms ease;
   display: flex;
   align-items: center;
   gap: clamp(0.75rem, 3vw, 2.5rem);
@@ -238,7 +274,7 @@ body {
   white-space: nowrap;
   opacity: 0.85;
 }
-.bar-menu a:hover { background: rgba(26, 18, 14, 0.07); opacity: 1; }
+.bar-menu a:hover { background: var(--hover); opacity: 1; }
 .ext { width: 11px; height: 11px; opacity: 0.55; flex: none; }
 
 .bar-link:focus-visible,

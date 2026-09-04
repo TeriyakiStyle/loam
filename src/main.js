@@ -45,6 +45,8 @@ let cleanup = null;
 
 function show(path) {
   const route = routes[path];
+  // Drives the colour script in main.css: body[data-page="biological"] etc.
+  document.body.dataset.page = path === '/' ? 'title' : path.slice(1);
   if (cleanup) cleanup();                 // let the old scene put itself away
   cleanup = route.scene.render(root, store);
   header.hidden = !route.bar;
