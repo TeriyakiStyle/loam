@@ -412,6 +412,19 @@ button.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px;
 }
 .stage.is-combining .piece { transition-duration: 1500ms, 1100ms, 400ms; }
 
+/* Turning, watering, waiting. The pile is being worked, so it breathes —
+   slow enough to read as tending rather than as a loading spinner. */
+@keyframes tend {
+  0%, 100% { transform: translateY(0)    scale(calc(var(--art) * var(--s))); }
+  50%      { transform: translateY(-4px) scale(calc(var(--art) * var(--s) * 1.02)); }
+}
+.stage.is-working .piece[data-at="centre"] img {
+  animation: tend 2600ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage.is-working .piece[data-at="centre"] img { animation: none; }
+}
+
 .hint {
   margin: 0;
   font-size: 0.82rem;

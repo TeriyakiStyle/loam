@@ -18,6 +18,16 @@ export function stageOps(stage, slots, slotCount) {
   const piece = id => stage.querySelector(`[data-piece="${id}"]`);
   const step = 360 / slotCount;
 
+  // A slot is either an index on the ring — evenly spaced, clockwise from the
+  // top — or an explicit [x, y] direction, for a scene that wants a shape the
+  // ring doesn't give it. Lengths under 1 pull a piece in towards the centre.
+  function direction(id) {
+    const slot = slots[id];
+    if (Array.isArray(slot)) return slot;
+    const angle = (-90 + slot * step) * Math.PI / 180;
+    return [Math.cos(angle), Math.sin(angle)];
+  }
+
   return {
     piece,
 
@@ -26,9 +36,9 @@ export function stageOps(stage, slots, slotCount) {
       const node = piece(id);
       node.dataset.at = where;
       if (where === 'ring') {
-        const angle = (-90 + slots[id] * step) * Math.PI / 180;
-        node.style.setProperty('--dx', Math.cos(angle).toFixed(4));
-        node.style.setProperty('--dy', Math.sin(angle).toFixed(4));
+        const [dx, dy] = direction(id);
+        node.style.setProperty('--dx', dx.toFixed(4));
+        node.style.setProperty('--dy', dy.toFixed(4));
       } else {
         node.style.setProperty('--dx', '0');
         node.style.setProperty('--dy', '0');

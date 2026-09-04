@@ -24,48 +24,51 @@ const PIECES = {
   living: { src: DIR + 'endingloamwithbio.svg', label: '',                  scale: 1.00 },
 };
 
-// Ring slots, clockwise from the top. The loam waits up top while its meal
-// is prepared below it.
-const SLOTS = { loam: 0, brown: 1, water: 2, green: 3 };
+// The loam waits at the top of the ring while its meal is prepared below.
+// The three ingredients aren't on the ring proper — they sit on a shallow arc
+// so they read as one triad rather than three separate arrivals, and so their
+// labels have room to breathe. Browns left, water low centre, greens right.
+const SLOTS = {
+  loam:  0,
+  brown: [-0.95, 0.42],
+  water: [ 0.00, 0.58],
+  green: [ 0.95, 0.42],
+};
+const SLOT_COUNT = 4;   // only the loam uses an index; 0 is the top
 
 // Cue times in seconds. Phrase boundaries pulled from the mp3 itself:
 //
-//   ffmpeg -i organicnarration.001.mp3 -af silencedetect=noise=-32dB:d=0.30 -f null -
+//   ffmpeg -i organicnarration.001.mp3 -af silencedetect=noise=-32dB:d=0.25 -f null -
 const CUES = [
   { t:  3.64, act: 'setAside'    },  // "you must invite life into it"
-  { t: 16.50, act: 'addBrown'    },  // "a pile of carbon — which browns"
-  { t: 21.57, act: 'addGreen'    },  // "and nitrogen — which greens"
-  { t: 26.19, act: 'buildPile'   },  // "you're setting the table"
-  { t: 30.37, act: 'addWater'    },  // "with a little work"
-  { t: 32.59, act: 'wetPile'     },  // "turning and watering your pile"
-  { t: 35.83, act: 'rot'         },  // "it transforms"
-  { t: 42.30, act: 'finish'      },  // "into finished compost"
-  { t: 49.99, act: 'incorporate' },  // "add this to your loamy soil"
+  // The triad, each on its own word: moistened, browns, greens.
+  { t: 16.50, act: 'addWater'    },  // "a moistened pile"
+  { t: 17.90, act: 'addBrown'    },  // "of carbon-rich browns"
+  { t: 19.48, act: 'addGreen'    },  // "and nitrogen-rich greens"
+  { t: 21.57, act: 'buildPile'   },  // "you're setting the table"
+  { t: 26.19, act: 'work'        },  // "with a little work — turning, watering, waiting"
+  { t: 30.37, act: 'rot'         },  // "your pile transforms"
+  { t: 35.83, act: 'finish'      },  // "into finished compost"
+  { t: 46.37, act: 'incorporate' },  // "add this to your loamy soil"
   { t: 52.30, act: 'done'        },
 ];
 
-// ---------------------------------------------------------------------------
-// DRAFT SUBTITLES — machine-transcribed, not verified.
-//
-// I can't hear audio, so these came from running the mp3 through an offline
-// speech recogniser and cleaning up the result. The timings are solid (they're
-// the file's own silence gaps) but the WORDS are a best reconstruction.
-// Read them against the recording and correct anything that's off.
-// ---------------------------------------------------------------------------
+// Matt's script, split at the recording's own phrase boundaries.
 const SUBS = [
-  { t:  0.00, text: 'The ground rock is not yet fertile soil.' },
-  { t:  3.64, text: 'You must invite life into it by providing food and water,' },
-  { t:  8.67, text: 'and the best way to send out invitations is composting.' },
+  { t:  0.00, text: 'Eroded rock is not yet fertile soil.' },
+  { t:  3.64, text: 'You must invite life into it by providing food and water.' },
+  { t:  8.67, text: 'And the best way to send that invitation is composting.' },
   { t: 12.87, text: 'Think of compost as a carefully prepared banquet.' },
-  { t: 16.50, text: 'By preparing a pile of carbon — which is browns —' },
-  { t: 21.57, text: 'and nitrogen — which is greens —' },
-  { t: 26.19, text: "you're setting the table for billions of microscopic guests." },
-  { t: 30.37, text: 'With a little work, turning and watering your pile,' },
-  { t: 35.83, text: 'it transforms as countless organisms break down the material' },
-  { t: 42.30, text: 'into finished compost.' },
-  { t: 44.17, text: 'The result is dark, crumbly, earthy organic matter.' },
-  { t: 48.54, text: 'When your compost is ready, add it to your loamy soil' },
-  { t: 49.99, text: 'to set the table for a wonderful exchange.' },
+  { t: 16.50, text: 'By preparing a moistened pile of carbon-rich browns' },
+  { t: 19.48, text: 'and nitrogen-rich greens,' },
+  { t: 21.57, text: "you're setting the table for billions of microscopic guests." },
+  { t: 26.19, text: 'With a little work — turning, watering, and waiting —' },
+  { t: 30.37, text: 'your pile transforms as countless organisms break down the material' },
+  { t: 35.83, text: 'into finished compost.' },
+  { t: 38.18, text: 'The result is dark, crumbly organic matter with an earthy smell;' },
+  { t: 44.17, text: 'your compost is ready!' },
+  { t: 46.37, text: 'Add this to your loamy soil' },
+  { t: 48.54, text: 'to set the table for a wonderful exchange!' },
 ];
 
 // The loam starts the sequence and the living soil ends it.
@@ -102,26 +105,30 @@ export function render(el, _store) {
   const wordmark = el.querySelector('[data-mark]');
   const nextLink = el.querySelector('[data-next]');
 
-  const { piece, place, hide } = stageOps(stage, SLOTS, 4);
+  const { piece, place, hide } = stageOps(stage, SLOTS, SLOT_COUNT);
 
   const ACTIONS = {
     // the loam steps aside; the centre is the kitchen now
     setAside()    { place('loam', 'ring'); },
+
+    // the triad assembles below the loam, one piece per word
+    addWater()    { place('water', 'ring'); },
     addBrown()    { place('brown', 'ring'); },
     addGreen()    { place('green', 'ring'); },
 
+    // all three come in together and become the pile
     buildPile()   { stage.classList.add('is-combining');
-                    place('brown', 'centre'); place('green', 'centre'); },
-    addWater()    { place('water', 'ring'); },
-    wetPile()     { place('water', 'centre');
-                    // the ingredients become the pile
+                    for (const id of ['water', 'brown', 'green']) place(id, 'centre');
                     setTimeout(() => {
-                      hide('brown', 'green', 'water');
+                      hide('water', 'brown', 'green');
                       place('pile1', 'centre');
                       stage.classList.remove('is-combining');
-                    }, 600); },
+                    }, 900); },
 
-    rot()         { hide('pile1'); place('pile2', 'centre'); },
+    // turning, watering, waiting — the pile is being tended
+    work()        { stage.classList.add('is-working'); },
+    rot()         { stage.classList.remove('is-working');
+                    hide('pile1'); place('pile2', 'centre'); },
     finish()      { hide('pile2'); place('pile3', 'centre'); },
 
     incorporate() { stage.classList.add('is-combining');
@@ -170,7 +177,7 @@ export function render(el, _store) {
     replay.disabled = true;
     startBtn.disabled = false;
     wordmark.classList.remove('is-in');
-    stage.classList.remove('is-done', 'is-combining');
+    stage.classList.remove('is-done', 'is-combining', 'is-working');
     nextLink.setAttribute('tabindex', '-1');
   }
 
