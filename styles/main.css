@@ -479,3 +479,26 @@ button.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px;
 .stage.is-done a.piece[data-at="centre"] { cursor: pointer; }
 .stage.is-done a.piece[data-at="centre"]:hover { --s: 1.05; }
 a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
+
+/* --------------------------------------------------------------------------
+   SUBTITLES
+   Fixed height for two lines so the column never moves as the text changes —
+   which is the whole reason the prompts came out in the first place.
+   -------------------------------------------------------------------------- */
+.subtitle {
+  margin: 0;
+  min-height: 3.4em;
+  max-width: 42ch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-wrap: balance;
+  font-size: clamp(1rem, 1.7vw, 1.2rem);
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+.subtitle.is-in { opacity: 0.9; }

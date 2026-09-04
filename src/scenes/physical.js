@@ -60,6 +60,25 @@ const CUES = [
   { t: 34.3, act: 'done'     },
 ];
 
+// Subtitles, on the same clock as everything else. A line shows from its `t`
+// until the next line's `t`. The times are the phrase boundaries pulled out of
+// the mp3, so they are the recording's own rhythm rather than a guess.
+//
+// These must match what the voice actually SAYS, not the latest draft of the
+// script — a subtitle that disagrees with the audio is worse than an old word.
+const SUBS = [
+  { t:  0.0,  text: 'Soil begins with its texture.' },
+  { t:  2.39, text: 'Over millennia, bedrock weathers into ever-smaller particles:' },
+  { t:  6.54, text: 'coarse sand and fine silt.' },
+  { t:  9.34, text: 'Lastly there is clay, not broken down but chemically remade.' },
+  { t: 14.30, text: 'The smallest particle, and the greatest change.' },
+  { t: 17.71, text: 'Each size — from gritty to silky to sticky —' },
+  { t: 22.16, text: 'handles water, air, and nutrients differently.' },
+  { t: 27.13, text: 'When blended in the right ratios,' },
+  { t: 29.84, text: 'they create a balanced medium in which life will thrive.' },
+  { t: 34.40, text: '' },
+];
+
 
 // --- markup ----------------------------------------------------------------
 
@@ -91,6 +110,8 @@ export function render(el, _store) {
              alt="LOAM" width="141" height="38">
       </div>
 
+      <p class="subtitle" data-sub></p>
+
       <div class="seq-controls">
         <button type="button" class="ghost" data-mute aria-pressed="false">Mute</button>
         <button type="button" class="ghost" data-replay>Replay</button>
@@ -100,6 +121,7 @@ export function render(el, _store) {
 
   const stage    = el.querySelector('[data-stage]');
   const controls = el.querySelector('.seq-controls');
+  const sub      = el.querySelector('[data-sub]');
   const muteBtn  = el.querySelector('[data-mute]');
   const replay   = el.querySelector('[data-replay]');
   const startBtn = el.querySelector('[data-start]');
@@ -111,6 +133,7 @@ export function render(el, _store) {
   audio.preload = 'auto';
 
   let raf = null, fired = 0, startedAt = 0, alive = true;
+  let subAt = -1;           // which subtitle line is currently showing
   let useAudio = true;      // still hoping to follow the narration
   let audioLive = false;    // the narration is genuinely playing
 
@@ -143,6 +166,9 @@ export function render(el, _store) {
     place('rock', 'centre');
     piece('rock').dataset.at = 'centre';
     fired = 0;
+    subAt = -1;
+    sub.textContent = '';
+    sub.classList.remove('is-in');
     replay.classList.remove('is-ready');
     controls.classList.remove('is-open');
     replay.disabled = true;
@@ -202,6 +228,17 @@ export function render(el, _store) {
     while (fired < CUES.length && t >= CUES[fired].t) {
       ACTIONS[CUES[fired].act]();
       fired++;
+    }
+
+    // Last line whose time has passed. Recomputed rather than incremented, so
+    // it stays correct if the clock ever jumps.
+    let want = -1;
+    for (let i = 0; i < SUBS.length; i++) if (t >= SUBS[i].t) want = i;
+    if (want !== subAt) {
+      subAt = want;
+      const line = want >= 0 ? SUBS[want].text : '';
+      sub.textContent = line;
+      sub.classList.toggle('is-in', line !== '');
     }
     if (fired < CUES.length) raf = requestAnimationFrame(tick);
   }
