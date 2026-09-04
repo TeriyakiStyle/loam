@@ -99,6 +99,7 @@ export function render(el, _store) {
   `;
 
   const stage    = el.querySelector('[data-stage]');
+  const controls = el.querySelector('.seq-controls');
   const muteBtn  = el.querySelector('[data-mute]');
   const replay   = el.querySelector('[data-replay]');
   const startBtn = el.querySelector('[data-start]');
@@ -143,6 +144,7 @@ export function render(el, _store) {
     piece('rock').dataset.at = 'centre';
     fired = 0;
     replay.classList.remove('is-ready');
+    controls.classList.remove('is-open');
     replay.disabled = true;
     startBtn.disabled = false;
     wordmark.classList.remove('is-in');
@@ -171,6 +173,7 @@ export function render(el, _store) {
                  stage.classList.remove('is-combining');
                  wordmark.classList.add('is-in'); },
     done()     { replay.classList.add('is-ready');
+                 controls.classList.add('is-open');
                  replay.disabled = false;
                  nextLink.removeAttribute('tabindex');
                  stage.classList.add('is-done'); },

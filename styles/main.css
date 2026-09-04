@@ -290,6 +290,7 @@ body {
 
 .stage {
   --ring: clamp(112px, 26vmin, 178px);   /* how far the ring sits from centre */
+  --label-gap: 2.3rem;                   /* label distance below the artwork  */
   --piece: clamp(96px, 22vmin, 150px);   /* the box each drawing fits inside  */
   position: relative;
   width:  calc(var(--ring) * 2 + var(--piece) * 1.5);
@@ -314,14 +315,14 @@ body {
   border: 0;
   background: none;
   display: grid;
-  place-items: center;
+  /* Bottom-aligned so a tall rock and a flat pile share a ground line — which
+     is also what makes one label offset look right on all of them. */
+  place-items: end center;
   transform:
     translate(-50%, -50%)
-    translate(calc(var(--dx) * var(--ring)), calc(var(--dy) * var(--ring)))
-    scale(calc(var(--art) * var(--s)));
+    translate(calc(var(--dx) * var(--ring)), calc(var(--dy) * var(--ring)));
   transition: transform 900ms cubic-bezier(.22,.61,.36,1),
-              opacity 700ms ease,
-              filter 400ms ease;
+              opacity 700ms ease;
 }
 
 .piece img {
@@ -332,6 +333,11 @@ body {
   object-fit: contain;
   display: block;
   user-select: none;
+  /* anchored at the foot so every piece keeps the same ground line
+     however much it is scaled */
+  transform-origin: bottom center;
+  transform: scale(calc(var(--art) * var(--s)));
+  transition: transform 900ms cubic-bezier(.22,.61,.36,1), filter 400ms ease;
 }
 
 /* what the piece is doing right now */
@@ -347,18 +353,22 @@ button.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px;
 
 .piece-label {
   position: absolute;
-  bottom: -1.95rem;
-  font-size: 0.82rem;
-  letter-spacing: 0.09em;
+  /* line-height 1 makes the label's box exactly its cap height, so `bottom`
+     is a real gap rather than a gap minus the leading. */
+  line-height: 1;
+  bottom: calc(var(--label-gap) * -1);
+  font-size: 0.9rem;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   opacity: 0;
   transition: opacity 400ms ease;
   white-space: nowrap;
   color: var(--ink);
 }
-.piece[data-at="ring"] .piece-label { opacity: 0.5; }
+.piece[data-at="ring"] .piece-label { opacity: 0.75; }
 .piece.is-marked .piece-label { opacity: 1; }
-.piece.is-marked { filter: drop-shadow(0 3px 10px rgba(26,18,14,.28)); --s: 0.74; }
+.piece.is-marked { --s: 0.76; }
+.piece.is-marked img { filter: drop-shadow(0 3px 10px rgba(26,18,14,.28)); }
 
 /* the chemical step reads differently: slower, and it settles rather than lands */
 .stage.is-chemical .piece[data-at="centre"] {
@@ -374,20 +384,30 @@ button.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px;
   opacity: 0.55;
 }
 
-/* Always in the layout, so nothing below the stage shifts when Replay
-   becomes available. */
+/* Both buttons sit on the same centre and slide apart when Replay arrives.
+   Flexbox reflow can't be animated — Mute would jump — so this uses transforms,
+   which can. --btn is fixed so the maths holds when Mute becomes Unmute. */
 .seq-controls {
-  display: flex;
-  gap: 0.75rem;
-  min-height: 2rem;
-  align-items: center;
+  --btn: 6.6rem;
+  --gap: 0.7rem;
+  --apart: calc((var(--btn) + var(--gap)) / 2);
+  position: relative;
+  width: 100%;
+  height: 2.1rem;
 }
-.ghost[data-replay] {
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 500ms ease;
+.seq-controls .ghost {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: var(--btn);
+  transform: translateX(-50%);
+  transition: transform 620ms cubic-bezier(.22,.61,.36,1), opacity 420ms ease;
 }
-.ghost[data-replay].is-ready { visibility: visible; opacity: 0.6; }
+.seq-controls.is-open [data-mute]   { transform: translateX(calc(-50% - var(--apart))); }
+.seq-controls.is-open [data-replay] { transform: translateX(calc(-50% + var(--apart))); }
+
+.ghost[data-replay] { opacity: 0; pointer-events: none; }
+.ghost[data-replay].is-ready { opacity: 0.6; pointer-events: auto; }
 .ghost[data-replay].is-ready:hover { opacity: 1; }
 .ghost {
   font: inherit;
