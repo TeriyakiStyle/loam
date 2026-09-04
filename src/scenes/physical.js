@@ -91,18 +91,14 @@ export function render(el, _store) {
              alt="LOAM" width="141" height="38">
       </div>
 
-      <p class="hint" data-hint>Click the rock to begin.</p>
-
-      <div class="seq-controls" data-controls hidden>
+      <div class="seq-controls">
         <button type="button" class="ghost" data-mute aria-pressed="false">Mute</button>
-        <button type="button" class="ghost" data-replay hidden>Replay</button>
+        <button type="button" class="ghost" data-replay>Replay</button>
       </div>
     </section>
   `;
 
   const stage    = el.querySelector('[data-stage]');
-  const hint     = el.querySelector('[data-hint]');
-  const controls = el.querySelector('[data-controls]');
   const muteBtn  = el.querySelector('[data-mute]');
   const replay   = el.querySelector('[data-replay]');
   const startBtn = el.querySelector('[data-start]');
@@ -146,9 +142,8 @@ export function render(el, _store) {
     place('rock', 'centre');
     piece('rock').dataset.at = 'centre';
     fired = 0;
-    hint.textContent = 'Click the rock to begin.';
-    hint.hidden = false;
-    replay.hidden = true;
+    replay.classList.remove('is-ready');
+    replay.disabled = true;
     startBtn.disabled = false;
     wordmark.classList.remove('is-in');
     stage.classList.remove('is-done', 'is-chemical', 'is-combining');
@@ -175,11 +170,10 @@ export function render(el, _store) {
                  place('loam', 'centre');
                  stage.classList.remove('is-combining');
                  wordmark.classList.add('is-in'); },
-    done()     { replay.hidden = false;
+    done()     { replay.classList.add('is-ready');
+                 replay.disabled = false;
                  nextLink.removeAttribute('tabindex');
-                 stage.classList.add('is-done');
-                 hint.textContent = 'Click to continue';
-                 hint.hidden = false; },
+                 stage.classList.add('is-done'); },
   };
 
   // --- the clock --------------------------------------------------------
@@ -210,8 +204,6 @@ export function render(el, _store) {
   }
 
   function start() {
-    hint.hidden = true;
-    controls.hidden = false;
     startBtn.disabled = true;
     startedAt = performance.now();
 
