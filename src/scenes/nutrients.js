@@ -33,7 +33,7 @@ export function render(el, _store) {
   // centre there is only the chart and its labels. Cropping that dead space
   // is what keeps the page from scrolling on a laptop.
   const outer  = ringRadius(RINGS.length - 1);
-  const margin = 34;                        // tick labels live out here
+  const margin = 86;                        // tick labels and the live reading
   const above  = outer + margin;
   const below  = R_BEZEL + 22;              // the bezel, plus a little air
   const width  = above * 2;
@@ -50,27 +50,14 @@ export function render(el, _store) {
 
   el.innerHTML = `
     <section class="instrument">
-      <header class="instrument-head">
-        <h1>Nutrients</h1>
-        <p class="lede">What the soil holds is not what the plant gets.</p>
-      </header>
+      <h1 class="sr-only">Nutrients</h1>
 
-      <div class="scope">
-        <svg viewBox="0 0 ${width} ${height}" class="scope-svg"
-             role="group" aria-label="Nutrient availability">
-          ${RINGS.map((ring, i) =>
-            dialHTML(ring, { cx, cy, r: ringRadius(i) })).join('\n          ')}
-          ${radarHTML(NUTRIENTS, geom)}
-        </svg>
-
-        <div class="readouts">
-          ${RINGS.map(ring => `
-          <p class="readout" data-readout="${ring.key}">
-            <span class="readout-label">${ring.label}</span>
-            <span class="readout-value" data-value="${ring.key}"></span>
-          </p>`).join('')}
-        </div>
-      </div>
+      <svg viewBox="0 0 ${width} ${height}" class="scope-svg"
+           role="group" aria-label="Nutrient availability">
+        ${RINGS.map((ring, i) =>
+          dialHTML(ring, { cx, cy, r: ringRadius(i) })).join('\n        ')}
+        ${radarHTML(NUTRIENTS, geom)}
+      </svg>
 
       <dl class="levels" data-levels>
         ${NUTRIENTS.map(n => `
@@ -138,11 +125,6 @@ export function render(el, _store) {
       // Under half of its own reserve means held back, not absent — which is
       // the distinction the whole page exists to make.
       level.node.classList.toggle('is-locked', row.factor < 0.5);
-    }
-
-    for (const ring of RINGS) {
-      el.querySelector(`[data-value="${ring.key}"]`).textContent =
-        ring.format(values[ring.key]);
     }
 
     const worst  = limiting(rows);

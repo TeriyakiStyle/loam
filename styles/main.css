@@ -565,48 +565,25 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   margin: 0 auto;
 }
 
-.instrument-head { text-align: center; }
-.instrument-head h1 {
-  margin: 0;
-  font-size: clamp(1.35rem, 3.4vw, 1.9rem);
-  font-weight: 500;
-  letter-spacing: 0.02em;
+/* The page has no visible heading — the instrument is the heading. This keeps
+   one for anyone arriving by screen reader or landmark navigation. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
-.instrument-head .lede { margin: 0.3rem 0 0; opacity: 0.72; }
 
-/* The scope and its numeric readouts sit side by side when there is room,
-   and stack when there isn't. */
-.scope {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(1rem, 4vw, 3rem);
-  flex-wrap: wrap;
-  width: 100%;
-}
 .scope-svg {
   /* Height-driven: the vertical budget is what's actually scarce here, and
-     the readouts beside it can take whatever width is left. */
-  height: clamp(170px, 38vh, 340px);
+     the instrument should take what it can of it. */
+  height: clamp(190px, 46vh, 400px);
   width: auto;
   max-width: 100%;
   overflow: visible;
   touch-action: none;   /* dragging the dial must not scroll the page */
-}
-
-.readouts { display: flex; flex-direction: column; gap: 0.5rem; }
-.readout { margin: 0; display: flex; flex-direction: column; }
-.readout-label {
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  opacity: 0.6;
-}
-.readout-value {
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
-  font-weight: 300;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
 }
 
 /* --- radar ---------------------------------------------------------------- */
@@ -693,6 +670,16 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 }
 .dial-pip { fill: currentColor; }
 .dial-marker:focus-visible { outline: none; }
+/* The live reading, travelling with the marker. Small on purpose — it is a
+   label on the thing, not a headline. */
+.dial-value {
+  fill: currentColor;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
 .dial-marker:focus-visible .dial-knob {
   stroke-width: 3;
   filter: drop-shadow(0 0 6px currentColor);
@@ -792,10 +779,8 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
    what you cannot see. */
 @media (max-height: 860px) {
   .instrument { gap: 0.45rem; padding-bottom: 0.75rem; }
-  .instrument-head .lede { display: none; }
   .footnote { font-size: 0.72rem; }
   .levels { gap: 0.3rem 1.2rem; }
-  .readout-value { font-size: clamp(1.5rem, 4vw, 2rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {

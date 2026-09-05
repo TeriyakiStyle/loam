@@ -18,6 +18,11 @@ const DEG = Math.PI / 180;
 const A0 = 180;   // left end  — the minimum
 const A1 = 360;   // right end — the maximum
 
+// How far outside the arc the live reading rides. At the ends of the arc the
+// reading and the tick label sit on the same line, so this has to clear the
+// tick label's own width as well as its distance — hence 52 rather than 40.
+const VALUE_GAP = 52;
+
 const at = (cx, cy, r, deg) => [cx + Math.cos(deg * DEG) * r, cy + Math.sin(deg * DEG) * r];
 const angleOf = t => A0 + t * (A1 - A0);
 
@@ -63,6 +68,7 @@ export function dialHTML(ring, { cx, cy, r }) {
     : '';
 
   const [mx, my] = at(cx, cy, r, angleOf(norm(ring.start)));
+  const [vx, vy] = at(cx, cy, r + VALUE_GAP, angleOf(norm(ring.start)));
 
   return `<g class="dial" data-dial="${ring.key}">
       <defs>
@@ -88,6 +94,13 @@ export function dialHTML(ring, { cx, cy, r }) {
         <circle class="dial-knob" r="9"/>
         <circle class="dial-pip"  r="3.2"/>
       </g>
+
+      <!-- The reading rides along with the marker rather than sitting in a
+           corner: the number and the thing it measures stay together. -->
+      <text class="dial-value" data-dial-value aria-hidden="true"
+            text-anchor="middle" dominant-baseline="middle"
+            x="${vx.toFixed(1)}" y="${vy.toFixed(1)}"
+            >${ring.label} ${ring.format(ring.start)}</text>
     </g>`;
 }
 
@@ -99,6 +112,7 @@ export function dialOps(root, ring, { cx, cy, r }, onChange) {
   const g       = root.querySelector(`[data-dial="${ring.key}"]`);
   const hit     = g.querySelector('[data-hit]');
   const marker  = g.querySelector('[data-marker]');
+  const value$  = g.querySelector('[data-dial-value]');
   const svg     = root.closest('svg') || root.querySelector('svg') || root;
   const span    = ring.max - ring.min;
   const quantum = ring.step || 0.1;
@@ -110,10 +124,18 @@ export function dialOps(root, ring, { cx, cy, r }, onChange) {
 
   function place(v) {
     value = clamp(snap(v));
-    const [x, y] = at(cx, cy, r, angleOf((value - ring.min) / span));
+    const a = angleOf((value - ring.min) / span);
+
+    const [x, y] = at(cx, cy, r, a);
     marker.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
     marker.setAttribute('aria-valuenow', value.toFixed(2));
     marker.setAttribute('aria-valuetext', ring.format(value));
+
+    const [vx, vy] = at(cx, cy, r + VALUE_GAP, a);
+    value$.setAttribute('x', vx.toFixed(1));
+    value$.setAttribute('y', vy.toFixed(1));
+    value$.textContent = `${ring.label} ${ring.format(value)}`;
+
     if (onChange) onChange(value);
   }
 
