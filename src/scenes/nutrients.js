@@ -33,7 +33,10 @@ export function render(el, _store) {
   // centre there is only the chart and its labels. Cropping that dead space
   // is what keeps the page from scrolling on a laptop.
   const outer  = ringRadius(RINGS.length - 1);
-  const margin = 86;                        // tick labels and the live reading
+  // Wide enough for the longest zone name the reading can show, which lands
+  // at the very end of the arc where there is least room: "very strongly
+  // alkaline" is 160px across at pH 14. Measured, not guessed.
+  const margin = 142;                       // tick labels and the live reading
   const above  = outer + margin;
   const below  = R_BEZEL + 22;              // the bezel, plus a little air
   const width  = above * 2;

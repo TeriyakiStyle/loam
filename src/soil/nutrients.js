@@ -52,25 +52,42 @@ export const NUTRIENTS = [
 // So an acid soil collapses the whole polygon except potassium, while an
 // alkaline soil takes out phosphorus alone and leaves the rest. The chart
 // changes shape rather than just size, which is the thing worth seeing.
+//
+// The curves run the full 0–14 because that is the scale. Past roughly 3 and
+// 11 the numbers stop describing agronomy and start describing a chemistry
+// accident, so they fall to nothing — which is the honest reading, and it
+// shows just how narrow the workable window is against the whole span.
 // ---------------------------------------------------------------------------
 const PH_CURVES = {
-  N:  [[4.5, 0.12], [5.0, 0.22], [5.5, 0.42], [6.0, 0.72], [6.5, 0.92],
-       [7.0, 1.00], [7.5, 1.00], [8.0, 0.95], [8.5, 0.85], [9.0, 0.72]],
+  N:  [[0.0, 0.00], [3.0, 0.04],
+       [4.5, 0.12], [5.0, 0.22], [5.5, 0.42], [6.0, 0.72], [6.5, 0.92],
+       [7.0, 1.00], [7.5, 1.00], [8.0, 0.95], [8.5, 0.85], [9.0, 0.72],
+       [10.0, 0.45], [11.0, 0.20], [12.0, 0.06], [14.0, 0.00]],
 
-  P:  [[4.5, 0.12], [5.0, 0.22], [5.5, 0.42], [6.0, 0.75], [6.5, 1.00],
-       [7.0, 0.92], [7.5, 0.62], [8.0, 0.40], [8.5, 0.28], [9.0, 0.20]],
+  P:  [[0.0, 0.00], [3.0, 0.04],
+       [4.5, 0.12], [5.0, 0.22], [5.5, 0.42], [6.0, 0.75], [6.5, 1.00],
+       [7.0, 0.92], [7.5, 0.62], [8.0, 0.40], [8.5, 0.28], [9.0, 0.20],
+       [10.0, 0.14], [11.0, 0.08], [12.0, 0.03], [14.0, 0.00]],
 
-  K:  [[4.5, 0.35], [5.0, 0.50], [5.5, 0.68], [6.0, 0.85], [6.5, 0.95],
-       [7.0, 1.00], [7.5, 1.00], [8.0, 1.00], [8.5, 0.97], [9.0, 0.93]],
+  K:  [[0.0, 0.00], [3.0, 0.12],
+       [4.5, 0.35], [5.0, 0.50], [5.5, 0.68], [6.0, 0.85], [6.5, 0.95],
+       [7.0, 1.00], [7.5, 1.00], [8.0, 1.00], [8.5, 0.97], [9.0, 0.93],
+       [10.0, 0.72], [11.0, 0.45], [12.0, 0.18], [14.0, 0.00]],
 
-  S:  [[4.5, 0.28], [5.0, 0.40], [5.5, 0.58], [6.0, 0.80], [6.5, 0.93],
-       [7.0, 1.00], [7.5, 1.00], [8.0, 1.00], [8.5, 0.95], [9.0, 0.90]],
+  S:  [[0.0, 0.00], [3.0, 0.08],
+       [4.5, 0.28], [5.0, 0.40], [5.5, 0.58], [6.0, 0.80], [6.5, 0.93],
+       [7.0, 1.00], [7.5, 1.00], [8.0, 1.00], [8.5, 0.95], [9.0, 0.90],
+       [10.0, 0.66], [11.0, 0.38], [12.0, 0.14], [14.0, 0.00]],
 
-  Ca: [[4.5, 0.10], [5.0, 0.18], [5.5, 0.32], [6.0, 0.52], [6.5, 0.70],
-       [7.0, 0.86], [7.5, 0.96], [8.0, 1.00], [8.5, 1.00], [9.0, 0.98]],
+  Ca: [[0.0, 0.00], [3.0, 0.03],
+       [4.5, 0.10], [5.0, 0.18], [5.5, 0.32], [6.0, 0.52], [6.5, 0.70],
+       [7.0, 0.86], [7.5, 0.96], [8.0, 1.00], [8.5, 1.00], [9.0, 0.98],
+       [10.0, 0.85], [11.0, 0.55], [12.0, 0.22], [14.0, 0.00]],
 
-  Mg: [[4.5, 0.12], [5.0, 0.22], [5.5, 0.38], [6.0, 0.58], [6.5, 0.75],
-       [7.0, 0.90], [7.5, 0.98], [8.0, 1.00], [8.5, 0.98], [9.0, 0.95]],
+  Mg: [[0.0, 0.00], [3.0, 0.04],
+       [4.5, 0.12], [5.0, 0.22], [5.5, 0.38], [6.0, 0.58], [6.5, 0.75],
+       [7.0, 0.90], [7.5, 0.98], [8.0, 1.00], [8.5, 0.98], [9.0, 0.95],
+       [10.0, 0.80], [11.0, 0.50], [12.0, 0.20], [14.0, 0.00]],
 };
 
 // Straight-line interpolation between control points, flat outside them.
@@ -103,40 +120,60 @@ export const RINGS = [
   {
     key: 'ph',
     label: 'pH',
-    min: 4,
-    max: 9,
+    // The whole scale, not the gardening slice of it. Over 0–14 the midpoint
+    // lands on 7.0, so the apex of the arc is chemical neutrality exactly —
+    // and the band a vegetable bed actually wants shows up as the small notch
+    // it really is.
+    min: 0,
+    max: 14,
     start: 6.5,
     step: 0.1,
     // The band to aim for. Drawn as a brighter notch on the dial.
     sweet: [6.0, 7.0],
-    // Ticks worth labelling.
-    ticks: [4, 5, 6, 7, 8, 9],
+    // Ticks worth labelling. 7 earns its place among the evens.
+    ticks: [0, 2, 4, 6, 7, 8, 10, 12, 14],
     format: v => v.toFixed(1),
 
-    // Named regions, shown under the reading as it travels. The neutral band
-    // is the USDA/NRCS one — 6.6 to 7.3 — rather than a round 7.0, because
-    // that is the class soil surveys actually use. Note it is NOT the same as
-    // the target band above: neutral is what the soil IS, the sweet band is
-    // what a vegetable bed WANTS, and they only mostly overlap.
+    // Named regions, shown under the reading as it travels. These are the
+    // USDA/NRCS soil reaction classes, and the gradation is the point.
     //
-    // The survey scale is finer than this (strongly acid, moderately acid,
-    // slightly acid, and so on) — swap those in here if you ever want them.
+    // Chemically, neutral is 7.0 and everything below it is acid — so 6.5 is
+    // acid, full stop. But a scale with only three words puts pH 6.5 and pH
+    // 4.0 in the same bucket, which is true and useless: one is a fine
+    // vegetable bed, the other will kill what you plant in it. Calling 6.5
+    // "slightly acid" says both things at once.
+    //
+    // Note this is NOT the target band above. Neutral is what the soil IS;
+    // the sweet band is what a vegetable bed WANTS. They overlap, they are
+    // not the same claim, and the difference is worth leaving visible.
     zones: [
-      { upTo: 6.5,      label: 'acidic'   },
-      { upTo: 7.3,      label: 'neutral'  },
-      { upTo: Infinity, label: 'alkaline' },
+      { upTo: 3.4,      label: 'ultra acid'             },
+      { upTo: 4.4,      label: 'extremely acid'         },
+      { upTo: 5.0,      label: 'very strongly acid'     },
+      { upTo: 5.5,      label: 'strongly acid'          },
+      { upTo: 6.0,      label: 'moderately acid'        },
+      { upTo: 6.5,      label: 'slightly acid'          },
+      { upTo: 7.3,      label: 'neutral'                },
+      { upTo: 7.8,      label: 'slightly alkaline'      },
+      { upTo: 8.4,      label: 'moderately alkaline'    },
+      { upTo: 9.0,      label: 'strongly alkaline'      },
+      { upTo: Infinity, label: 'very strongly alkaline' },
     ],
     // Universal-indicator order — acid red through neutral green to alkaline
     // blue — pulled down in saturation so it belongs to this site rather than
     // to a chemistry catalogue.
     ramp: [
-      [4.0, 'hsl(2, 62%, 52%)'],
-      [5.0, 'hsl(26, 62%, 52%)'],
-      [6.0, 'hsl(52, 56%, 50%)'],
-      [6.5, 'hsl(88, 46%, 46%)'],
-      [7.0, 'hsl(140, 42%, 44%)'],
-      [8.0, 'hsl(190, 45%, 47%)'],
-      [9.0, 'hsl(220, 48%, 52%)'],
+      [0.0,  'hsl(348, 60%, 46%)'],
+      [2.0,  'hsl(0, 62%, 50%)'],
+      [4.0,  'hsl(26, 62%, 52%)'],
+      [6.0,  'hsl(52, 56%, 50%)'],
+      [6.5,  'hsl(88, 46%, 46%)'],
+      [7.0,  'hsl(140, 42%, 44%)'],
+      [8.0,  'hsl(185, 45%, 47%)'],
+      [9.0,  'hsl(215, 48%, 52%)'],
+      [11.0, 'hsl(252, 42%, 54%)'],
+      [12.5, 'hsl(280, 38%, 50%)'],
+      [14.0, 'hsl(300, 34%, 42%)'],
     ],
     effect: (nutrient, v) => curve(PH_CURVES[nutrient], v),
 
@@ -145,11 +182,13 @@ export const RINGS = [
     // that changes length as you drag would otherwise resize the document and
     // make the whole page twitch under your hand.
     notes: [
+      { upTo: 3.4, text: 'Past soil chemistry. Acid this strong strips the exchange sites bare and dissolves the minerals themselves — no root, no fungus, no bacterium works here.' },
       { upTo: 5.5, text: 'Acid ground. Aluminium and iron are holding the phosphorus, and the bacteria that free up nitrogen and sulfur have stalled.' },
       { upTo: 6.0, text: 'A little sour. Phosphorus is starting to lock away, and calcium and magnesium are scarce.' },
-      { upTo: 7.0, text: 'The working range. Nothing is locked out; nothing is at its limit.' },
+      { upTo: 7.3, text: 'The working range. Nothing is locked out; nothing is at its limit.' },
       { upTo: 7.8, text: 'Turning alkaline. Calcium and magnesium are freely available, but phosphorus is beginning to bind to them.' },
-      { upTo: Infinity, text: 'Alkaline. Calcium has taken the phosphorus out of reach — the reserve is still there, the plant just cannot get at it.' },
+      { upTo: 9.0, text: 'Alkaline. Calcium has taken the phosphorus out of reach — the reserve is still there, the plant just cannot get at it.' },
+      { upTo: Infinity, text: 'Beyond soil. Ground this alkaline disperses its own structure: the clay slumps, the pores close, and what little is left cannot move to a root anyway.' },
     ],
   },
 

@@ -579,7 +579,10 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 .scope-svg {
   /* Height-driven: the vertical budget is what's actually scarce here, and
      the instrument should take what it can of it. */
-  height: clamp(190px, 46vh, 400px);
+  /* The canvas is wider than it is tall (the zone names need room at the ends
+     of the arc), so height alone would leave the dial looking small. Take the
+     lesser of the two budgets and let whichever is scarcer decide. */
+  height: min(clamp(180px, 44vh, 470px), 40vw);
   width: auto;
   max-width: 100%;
   overflow: visible;
