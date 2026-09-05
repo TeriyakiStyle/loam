@@ -12,6 +12,8 @@
 // same component at a bigger radius each time.
 // ---------------------------------------------------------------------------
 
+import { zoneLabel } from '../soil/nutrients.js';
+
 const DEG = Math.PI / 180;
 
 // The arc's angular span, in SVG degrees (0 = right, 90 = down).
@@ -69,6 +71,7 @@ export function dialHTML(ring, { cx, cy, r }) {
 
   const [mx, my] = at(cx, cy, r, angleOf(norm(ring.start)));
   const [vx, vy] = at(cx, cy, r + VALUE_GAP, angleOf(norm(ring.start)));
+  const zoned = Boolean(ring.zones);
 
   return `<g class="dial" data-dial="${ring.key}">
       <defs>
@@ -96,11 +99,17 @@ export function dialHTML(ring, { cx, cy, r }) {
       </g>
 
       <!-- The reading rides along with the marker rather than sitting in a
-           corner: the number and the thing it measures stay together. -->
-      <text class="dial-value" data-dial-value aria-hidden="true"
-            text-anchor="middle" dominant-baseline="middle"
-            x="${vx.toFixed(1)}" y="${vy.toFixed(1)}"
-            >${ring.label} ${ring.format(ring.start)}</text>
+           corner: the number and the thing it measures stay together. The
+           whole group is translated, so both lines move as one. -->
+      <g class="dial-reading" data-dial-reading aria-hidden="true"
+         transform="translate(${vx.toFixed(1)} ${vy.toFixed(1)})">
+        <text class="dial-value" data-dial-value
+              text-anchor="middle" dominant-baseline="middle"
+              y="${zoned ? -6 : 0}">${ring.label} ${ring.format(ring.start)}</text>
+        ${zoned ? `<text class="dial-zone" data-dial-zone
+              text-anchor="middle" dominant-baseline="middle"
+              y="8">${zoneLabel(ring, ring.start)}</text>` : ''}
+      </g>
     </g>`;
 }
 
@@ -112,14 +121,19 @@ export function dialOps(root, ring, { cx, cy, r }, onChange) {
   const g       = root.querySelector(`[data-dial="${ring.key}"]`);
   const hit     = g.querySelector('[data-hit]');
   const marker  = g.querySelector('[data-marker]');
+  const reading = g.querySelector('[data-dial-reading]');
   const value$  = g.querySelector('[data-dial-value]');
+  const zone$   = g.querySelector('[data-dial-zone]');
   const svg     = root.closest('svg') || root.querySelector('svg') || root;
   const span    = ring.max - ring.min;
   const quantum = ring.step || 0.1;
 
   let value = ring.start;
 
-  const snap = v => Math.round(v / quantum) * quantum;
+  // Rounded through a fixed number of decimals, not just to the nearest step:
+  // Math.round(7.3 / 0.1) * 0.1 is 7.300000000000001 in binary floating point,
+  // which then falls the wrong side of a band edge written as 7.3.
+  const snap = v => Number((Math.round(v / quantum) * quantum).toFixed(6));
   const clamp = v => Math.min(ring.max, Math.max(ring.min, v));
 
   function place(v) {
@@ -129,12 +143,16 @@ export function dialOps(root, ring, { cx, cy, r }, onChange) {
     const [x, y] = at(cx, cy, r, a);
     marker.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
     marker.setAttribute('aria-valuenow', value.toFixed(2));
-    marker.setAttribute('aria-valuetext', ring.format(value));
 
     const [vx, vy] = at(cx, cy, r + VALUE_GAP, a);
-    value$.setAttribute('x', vx.toFixed(1));
-    value$.setAttribute('y', vy.toFixed(1));
+    reading.setAttribute('transform', `translate(${vx.toFixed(1)} ${vy.toFixed(1)})`);
     value$.textContent = `${ring.label} ${ring.format(value)}`;
+
+    const zone = zoneLabel(ring, value);
+    if (zone$) zone$.textContent = zone;
+    // The region belongs in the accessible reading too, not just the picture.
+    marker.setAttribute('aria-valuetext',
+      zone ? `${ring.format(value)}, ${zone}` : ring.format(value));
 
     if (onChange) onChange(value);
   }

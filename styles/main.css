@@ -671,13 +671,25 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 .dial-pip { fill: currentColor; }
 .dial-marker:focus-visible { outline: none; }
 /* The live reading, travelling with the marker. Small on purpose — it is a
-   label on the thing, not a headline. */
+   label on the thing, not a headline.
+
+   Both lines stay in the ink colour rather than picking up the arc's own
+   hue: the red end of a pH ramp lands around 2:1 against this ground, which
+   is fine for a 7px-wide stroke and unreadable for 11px type. The arc already
+   carries the colour; the words carry the meaning. */
 .dial-value {
   fill: currentColor;
   font-size: 13px;
   letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
   opacity: 0.9;
+}
+.dial-zone {
+  fill: currentColor;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.55;
 }
 
 .dial-marker:focus-visible .dial-knob {

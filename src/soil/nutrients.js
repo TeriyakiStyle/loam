@@ -112,6 +112,20 @@ export const RINGS = [
     // Ticks worth labelling.
     ticks: [4, 5, 6, 7, 8, 9],
     format: v => v.toFixed(1),
+
+    // Named regions, shown under the reading as it travels. The neutral band
+    // is the USDA/NRCS one — 6.6 to 7.3 — rather than a round 7.0, because
+    // that is the class soil surveys actually use. Note it is NOT the same as
+    // the target band above: neutral is what the soil IS, the sweet band is
+    // what a vegetable bed WANTS, and they only mostly overlap.
+    //
+    // The survey scale is finer than this (strongly acid, moderately acid,
+    // slightly acid, and so on) — swap those in here if you ever want them.
+    zones: [
+      { upTo: 6.5,      label: 'acidic'   },
+      { upTo: 7.3,      label: 'neutral'  },
+      { upTo: Infinity, label: 'alkaline' },
+    ],
     // Universal-indicator order — acid red through neutral green to alkaline
     // blue — pulled down in saturation so it belongs to this site rather than
     // to a chemistry catalogue.
@@ -186,6 +200,11 @@ export function evaluate(reserves, values, rings = RINGS) {
 /** Index of the note that applies at this value. */
 export function noteIndex(ring, value) {
   return ring.notes.findIndex(n => value <= n.upTo);
+}
+
+/** The name of the region a value falls in, or '' if the ring has no regions. */
+export function zoneLabel(ring, value) {
+  return ring.zones?.find(z => value <= z.upTo)?.label ?? '';
 }
 
 /** The scarcest one — what the bed is actually limited by. */
