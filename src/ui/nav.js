@@ -26,6 +26,7 @@ const UTILITY = [
     // rename or replace the list, the markup follows it.
     label: 'Appendix',
     items: [
+      { label: 'Nutrients',            href: '#/nutrients' },
       { label: 'The texture triangle', href: '#/texture-triangle' },
       { label: 'Soil components',      href: '#/soil-components' },
     ],
@@ -34,6 +35,9 @@ const UTILITY = [
     label: 'Resources',
     items: [
       { label: 'ISRIC — World Soil Information', href: 'https://isric.org/', external: true },
+      { label: 'BBCH scale — growth stages',
+        href: 'https://www.julius-kuehn.de/en/jki-publication-series/bbch-scale/',
+        external: true },
     ],
   },
   { label: 'Contact', href: '#/contact' },

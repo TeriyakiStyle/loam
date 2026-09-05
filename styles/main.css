@@ -46,7 +46,17 @@ body[data-page="sow"] {
   --hover:  rgba(245, 241, 226, 0.10);
 }
 
-/* Chemical — still on the default. Add a block here when you know its colour. */
+/* Nutrients — cool and dark. This one is an instrument, not a chapter, so it
+   steps out of the warm family on purpose: the reading should feel measured. */
+body[data-page="nutrients"] {
+  --ground: #2E3A3C;
+  --ink:    #E8EFEF;
+  --bar:    #37464A;
+  --panel:  #43555A;
+  --line:   rgba(232, 239, 239, 0.20);
+  --hover:  rgba(232, 239, 239, 0.10);
+  --plot:   #E4B363;   /* what the plant gets — the one warm thing on screen */
+}
 
 * { box-sizing: border-box; }
 
@@ -535,3 +545,231 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 .subtitle.is-in { opacity: 0.9; }
 /* the closing line leaves more slowly than a mid-sequence line change */
 .subtitle.is-closing { transition-duration: 1100ms; }
+
+/* --------------------------------------------------------------------------
+   THE INSTRUMENT — Nutrients
+   Rings outside are the environment; the chart inside is the outcome.
+   -------------------------------------------------------------------------- */
+.instrument {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.6rem, 1.8vh, 1.2rem);
+  padding: clamp(0.4rem, 1.6vh, 1.2rem) 1rem 1.75rem;
+  width: 100%;
+  max-width: 62rem;
+  margin: 0 auto;
+}
+
+.instrument-head { text-align: center; }
+.instrument-head h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 3.4vw, 1.9rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.instrument-head .lede { margin: 0.3rem 0 0; opacity: 0.72; }
+
+/* The scope and its numeric readouts sit side by side when there is room,
+   and stack when there isn't. */
+.scope {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 4vw, 3rem);
+  flex-wrap: wrap;
+  width: 100%;
+}
+.scope-svg {
+  /* Height-driven: the vertical budget is what's actually scarce here, and
+     the readouts beside it can take whatever width is left. */
+  height: clamp(180px, 40vh, 340px);
+  width: auto;
+  max-width: 100%;
+  overflow: visible;
+  touch-action: none;   /* dragging the dial must not scroll the page */
+}
+
+.readouts { display: flex; flex-direction: column; gap: 0.5rem; }
+.readout { margin: 0; display: flex; flex-direction: column; }
+.readout-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.readout-value {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* --- radar ---------------------------------------------------------------- */
+.web, .spoke {
+  fill: none;
+  stroke: currentColor;
+  opacity: 0.16;
+  stroke-width: 1;
+}
+.axis-label {
+  fill: currentColor;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+/* what the soil holds */
+.plot-reserve {
+  fill: currentColor;
+  fill-opacity: 0.07;
+  stroke: currentColor;
+  stroke-opacity: 0.35;
+  stroke-width: 1.2;
+  stroke-dasharray: 3 4;
+  transition: d 260ms ease;
+}
+/* what the plant reaches */
+.plot-available {
+  fill: var(--plot, #E4B363);
+  fill-opacity: 0.30;
+  stroke: var(--plot, #E4B363);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: d 260ms ease;
+}
+[data-dots] circle {
+  fill: var(--plot, #E4B363);
+  transition: cx 260ms ease, cy 260ms ease;
+}
+
+/* --- dial ----------------------------------------------------------------- */
+.dial-track {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+/* an invisible fat arc so the whole dial is grabbable, not just the knob */
+.dial-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 30;
+  cursor: grab;
+}
+.dial-hit:active { cursor: grabbing; }
+.dial-sweet {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.42;
+  stroke-linecap: round;
+}
+.dial-tick { stroke: currentColor; opacity: 0.3; stroke-width: 1; }
+.dial-tick-label {
+  fill: currentColor;
+  font-size: 11px;
+  opacity: 0.5;
+  font-variant-numeric: tabular-nums;
+}
+.dial-marker { cursor: grab; }
+.dial-marker:active { cursor: grabbing; }
+.dial-knob {
+  fill: var(--ground);
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.dial-pip { fill: currentColor; }
+.dial-marker:focus-visible { outline: none; }
+.dial-marker:focus-visible .dial-knob {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+/* --- the same numbers, read rather than seen ------------------------------ */
+/* Two label+bar pairs per row. `display: contents` on .level flattens each
+   pair into the grid, so the columns go label, bar, label, bar. */
+.levels {
+  margin: 0;
+  width: 100%;
+  max-width: 40rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  align-items: center;
+  gap: 0.45rem 1.4rem;
+}
+@media (max-width: 560px) { .levels { grid-template-columns: auto 1fr; } }
+
+.level { display: contents; }
+.level dt {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  text-align: right;
+  align-self: center;
+}
+.level dt abbr { text-decoration: none; border: 0; }
+.level dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.level-track {
+  position: relative;
+  flex: 1;
+  height: 7px;
+  border-radius: 4px;
+  background: var(--hover);
+  overflow: hidden;
+}
+.level-reserve, .level-available {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 4px;
+  transition: width 260ms ease;
+}
+.level-reserve   { background: currentColor; opacity: 0.18; }
+.level-available { background: var(--plot, #E4B363); }
+.level-figure {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.65;
+  min-width: 2.6rem;
+  text-align: right;
+}
+/* held back rather than absent — the distinction the page is about */
+.level.is-locked dt,
+.level.is-locked .level-figure { opacity: 1; color: #E4746B; }
+
+.verdict {
+  margin: 0;
+  max-width: 40rem;
+  text-align: center;
+  line-height: 1.55;
+}
+.verdict strong { font-weight: 600; }
+.verdict-note { display: block; margin-top: 0.35rem; opacity: 0.7; }
+
+.footnote {
+  margin: 0;
+  max-width: 36rem;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  opacity: 0.45;
+}
+
+/* Short screens: the instrument keeps its size, the words around it give way.
+   Nothing here should ever push the dial below the fold — you cannot drag
+   what you cannot see. */
+@media (max-height: 760px) {
+  .instrument { gap: 0.5rem; padding-bottom: 1rem; }
+  .instrument-head .lede { display: none; }
+  .footnote { font-size: 0.72rem; }
+  .levels { gap: 0.3rem 1.2rem; }
+  .readout-value { font-size: clamp(1.5rem, 4vw, 2rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plot-reserve, .plot-available, [data-dots] circle,
+  .level-reserve, .level-available { transition: none; }
+}
