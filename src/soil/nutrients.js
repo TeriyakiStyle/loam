@@ -125,13 +125,18 @@ export const RINGS = [
       [9.0, 'hsl(220, 48%, 52%)'],
     ],
     effect: (nutrient, v) => curve(PH_CURVES[nutrient], v),
-    // Shown under the chart when this ring is the one doing the damage.
-    note: v =>
-      v < 5.5 ? 'Acid ground. Aluminium and iron are holding the phosphorus, and the bacteria that free up nitrogen and sulfur have stalled.'
-    : v < 6.0 ? 'A little sour. Phosphorus is starting to lock away, and calcium and magnesium are scarce.'
-    : v <= 7.0 ? 'The working range. Nothing is locked out; nothing is at its limit.'
-    : v <= 7.8 ? 'Turning alkaline. Calcium and magnesium are freely available, but phosphorus is beginning to bind to them.'
-    :            'Alkaline. Calcium has taken the phosphorus out of reach — the reserve is still there, the plant just cannot get at it.',
+
+    // What to say under the chart, by band. A list rather than a function so
+    // the page can lay every line out at once and reserve the tallest — text
+    // that changes length as you drag would otherwise resize the document and
+    // make the whole page twitch under your hand.
+    notes: [
+      { upTo: 5.5, text: 'Acid ground. Aluminium and iron are holding the phosphorus, and the bacteria that free up nitrogen and sulfur have stalled.' },
+      { upTo: 6.0, text: 'A little sour. Phosphorus is starting to lock away, and calcium and magnesium are scarce.' },
+      { upTo: 7.0, text: 'The working range. Nothing is locked out; nothing is at its limit.' },
+      { upTo: 7.8, text: 'Turning alkaline. Calcium and magnesium are freely available, but phosphorus is beginning to bind to them.' },
+      { upTo: Infinity, text: 'Alkaline. Calcium has taken the phosphorus out of reach — the reserve is still there, the plant just cannot get at it.' },
+    ],
   },
 
   // Next up. Uncomment, give it curves, and it draws itself.
@@ -141,6 +146,7 @@ export const RINGS = [
   //   step: 0.5, sweet: [15, 25], ticks: [0, 10, 20, 30],
   //   format: v => `${v.toFixed(0)}°C`,
   //   ramp: [...],
+  //   notes: [...],
   //   effect: (nutrient, v) => ...,   // cold soil stalls mineralisation:
   //                                   // N and S first, then everything
   // },
@@ -175,6 +181,11 @@ export function evaluate(reserves, values, rings = RINGS) {
     const reserve = reserves[n.key] ?? 0;
     return { ...n, reserve, factor, available: reserve * factor };
   });
+}
+
+/** Index of the note that applies at this value. */
+export function noteIndex(ring, value) {
+  return ring.notes.findIndex(n => value <= n.upTo);
 }
 
 /** The scarcest one — what the bed is actually limited by. */

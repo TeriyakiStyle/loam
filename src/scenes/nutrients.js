@@ -9,15 +9,19 @@
 // a second ring means adding it to RINGS — nothing here changes.
 // ---------------------------------------------------------------------------
 
-import { NUTRIENTS, RINGS, SAMPLE_BED, evaluate, limiting, lockedFraction }
+import { NUTRIENTS, RINGS, SAMPLE_BED, evaluate, limiting, lockedFraction, noteIndex }
   from '../soil/nutrients.js';
 import { radarHTML, radarOps } from '../ui/radar.js';
 import { dialHTML, dialOps }   from '../ui/dial.js';
 
-// Radar radius, then the first ring, then each ring after it.
-const R_CHART = 104;
-const R_FIRST = 168;
-const R_STEP  = 36;
+// The face, from the middle out. The hexagon floats at the centre, the axis
+// letters ride a circle of their own, the bezel encloses them both, and the
+// environment dials sit outside all of it.
+const R_CHART = 92;    // hexagon at full value
+const R_LABEL = 130;   // where the letters sit
+const R_BEZEL = 164;   // the circle around them
+const R_FIRST = 198;   // the first dial
+const R_STEP  = 36;    // and each one after it
 
 const ringRadius = i => R_FIRST + i * R_STEP;
 
@@ -31,12 +35,18 @@ export function render(el, _store) {
   const outer  = ringRadius(RINGS.length - 1);
   const margin = 34;                        // tick labels live out here
   const above  = outer + margin;
-  const below  = R_CHART + 44;              // chart, its labels, a little air
+  const below  = R_BEZEL + 22;              // the bezel, plus a little air
   const width  = above * 2;
   const height = above + below;
   const cx = width / 2;
   const cy = above;
-  const geom = { cx, cy, r: R_CHART };
+  const geom = {
+    cx, cy,
+    r: R_CHART,
+    labelGap: R_LABEL - R_CHART,
+    bezel: R_BEZEL,
+    webs: 3,        // fewer gridlines now the hexagon is smaller
+  };
 
   el.innerHTML = `
     <section class="instrument">
@@ -76,7 +86,24 @@ export function render(el, _store) {
         </div>`).join('')}
       </dl>
 
-      <p class="verdict" data-verdict></p>
+      <!-- Every line the verdict can ever show is laid out here at once, in a
+           single grid cell, with the inactive ones merely invisible. The block
+           is therefore always as tall as its tallest possible contents, so
+           dragging the dial cannot change the height of the document — which
+           is what made the page twitch as the text got longer or shorter. -->
+      <div class="verdict">
+        <div class="stack">
+          <p class="verdict-line" data-verdict></p>
+          <p class="verdict-line is-sizer" aria-hidden="true">
+            <strong>Phosphorus</strong> is the limit here, at 100% — and
+            100% of everything in this soil is out of reach.</p>
+        </div>
+        <div class="stack">
+          ${RINGS[0].notes.map((n, i) => `
+          <p class="verdict-note" data-note="${i}">${n.text}</p>`).join('')}
+        </div>
+      </div>
+
       <p class="footnote">
         Faint outline: what the soil holds. Solid: what the roots can reach.
         Availability curves follow the standard Truog bands — a teaching
@@ -88,6 +115,7 @@ export function render(el, _store) {
   const svg     = el.querySelector('.scope-svg');
   const radar   = radarOps(svg, geom);
   const verdict = el.querySelector('[data-verdict]');
+  const notes   = [...el.querySelectorAll('[data-note]')];
   const levels  = Object.fromEntries([...el.querySelectorAll('[data-level]')]
     .map(node => [node.dataset.level, {
       node,
@@ -119,12 +147,14 @@ export function render(el, _store) {
 
     const worst  = limiting(rows);
     const locked = lockedFraction(rows);
-    const ring   = RINGS[0];
     verdict.innerHTML =
       `<strong>${worst.name}</strong> is the limit here, at
        ${Math.round(worst.available * 100)}% — and
-       ${Math.round(locked * 100)}% of everything in this soil is out of reach.
-       <span class="verdict-note">${ring.note(values[ring.key])}</span>`;
+       ${Math.round(locked * 100)}% of everything in this soil is out of reach.`;
+
+    // Show one note, hide the rest. They all keep their space.
+    const active = noteIndex(RINGS[0], values[RINGS[0].key]);
+    notes.forEach((node, i) => node.classList.toggle('is-on', i === active));
   }
 
   const dials = RINGS.map((ring, i) =>

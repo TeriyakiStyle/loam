@@ -27,12 +27,16 @@ function polygon(cx, cy, r, values) {
 }
 
 /**
- * The static parts: web, spokes, labels. Returns SVG markup.
+ * The static parts: bezel, web, spokes, labels. Returns SVG markup.
+ *
+ * The bezel is a plain circle drawn OUTSIDE the labels, so the chart reads as
+ * an instrument face with the hexagon floating at its centre and the axis
+ * letters in the ring between the two.
  *
  * @param axes  [{ symbol, name }]
- * @param geom  { cx, cy, r, labelGap, webs }
+ * @param geom  { cx, cy, r, labelGap, bezel, webs }
  */
-export function radarHTML(axes, { cx, cy, r, labelGap = 26, webs = 4 }) {
+export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4 }) {
   const n = axes.length;
 
   const rings = Array.from({ length: webs }, (_, i) => {
@@ -46,20 +50,24 @@ export function radarHTML(axes, { cx, cy, r, labelGap = 26, webs = 4 }) {
     return `<line class="spoke" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
   }).join('\n      ');
 
-  // Labels sit past the outer web, nudged so the ones on the sides don't
-  // collide with it and the ones top and bottom stay centred.
+  // Labels ride their own circle between the web and the bezel, centred on it
+  // rather than anchored outward — they belong to the ring, not to the web.
   const labels = axes.map((axis, i) => {
     const a = axisAngle(i, n);
     const x = cx + Math.cos(a) * (r + labelGap);
     const y = cy + Math.sin(a) * (r + labelGap);
-    const anchor = Math.abs(Math.cos(a)) < 0.2 ? 'middle' : (Math.cos(a) > 0 ? 'start' : 'end');
     return `<text class="axis-label" x="${x.toFixed(1)}" y="${y.toFixed(1)}"
-            text-anchor="${anchor}" dominant-baseline="middle"
+            text-anchor="middle" dominant-baseline="middle"
             data-axis="${axis.key}">${axis.symbol}<title>${axis.name}</title></text>`;
   }).join('\n      ');
 
   const flat = Array(n).fill(0);
+  const ring = bezel
+    ? `<circle class="web-bezel" cx="${cx}" cy="${cy}" r="${bezel}"/>`
+    : '';
+
   return `<g class="radar">
+      ${ring}
       ${rings}
       ${spokes}
       <path class="plot-reserve"   data-reserve  d="M${polygon(cx, cy, r, flat)} Z"/>

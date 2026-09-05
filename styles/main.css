@@ -60,6 +60,10 @@ body[data-page="nutrients"] {
 
 * { box-sizing: border-box; }
 
+/* Keep the scrollbar's gutter whether or not a scrollbar is showing, so a
+   page that grows by one line doesn't shift sideways at the same time. */
+html { scrollbar-gutter: stable; }
+
 body {
   margin: 0;
   min-height: 100svh;
@@ -583,7 +587,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 .scope-svg {
   /* Height-driven: the vertical budget is what's actually scarce here, and
      the readouts beside it can take whatever width is left. */
-  height: clamp(180px, 40vh, 340px);
+  height: clamp(170px, 38vh, 340px);
   width: auto;
   max-width: 100%;
   overflow: visible;
@@ -606,6 +610,15 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 }
 
 /* --- radar ---------------------------------------------------------------- */
+/* The bezel. Purely for the look of the thing — it encloses the axis letters,
+   leaving the hexagon floating at the centre of its own face. */
+.web-bezel {
+  fill: none;
+  stroke: currentColor;
+  opacity: 0.3;
+  stroke-width: 1.1;
+}
+
 .web, .spoke {
   fill: none;
   stroke: currentColor;
@@ -740,14 +753,30 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 .level.is-locked dt,
 .level.is-locked .level-figure { opacity: 1; color: #E4746B; }
 
+/* Everything the verdict might say occupies the same grid cell, so the block
+   is always as tall as its longest line and the page never resizes mid-drag. */
+.stack { display: grid; }
+.stack > * { grid-area: 1 / 1; margin: 0; }
+
 .verdict {
   margin: 0;
   max-width: 40rem;
   text-align: center;
   line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 .verdict strong { font-weight: 600; }
-.verdict-note { display: block; margin-top: 0.35rem; opacity: 0.7; }
+.verdict-line.is-sizer { visibility: hidden; }
+
+/* Held in place by the stack; only one is ever visible. */
+.verdict-note {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms ease;
+}
+.verdict-note.is-on { opacity: 0.7; visibility: visible; }
 
 .footnote {
   margin: 0;
@@ -761,8 +790,8 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 /* Short screens: the instrument keeps its size, the words around it give way.
    Nothing here should ever push the dial below the fold — you cannot drag
    what you cannot see. */
-@media (max-height: 760px) {
-  .instrument { gap: 0.5rem; padding-bottom: 1rem; }
+@media (max-height: 860px) {
+  .instrument { gap: 0.45rem; padding-bottom: 0.75rem; }
   .instrument-head .lede { display: none; }
   .footnote { font-size: 0.72rem; }
   .levels { gap: 0.3rem 1.2rem; }
