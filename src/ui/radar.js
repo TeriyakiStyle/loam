@@ -40,10 +40,13 @@ function polygon(cx, cy, r, values) {
  * an instrument face with the hexagon floating at its centre and the axis
  * letters in the ring between the two.
  *
- * @param axes  [{ symbol, name }]
- * @param geom  { cx, cy, r, labelGap, bezel, webs }
+ * @param axes  [{ key, symbol, name }]
+ * @param geom  { cx, cy, r, labelGap, bezel, webs, pick }
+ *
+ * `pick` turns the axis letters into buttons — see the labels below.
  */
-export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4 }) {
+export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4,
+                                  pick = false }) {
   const n = axes.length;
 
   const rings = Array.from({ length: webs }, (_, i) => {
@@ -59,13 +62,23 @@ export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4 
 
   // Labels ride their own circle between the web and the bezel, centred on it
   // rather than anchored outward — they belong to the ring, not to the web.
+  //
+  // With `pick` on, each one is wrapped in a button: a transparent disc gives
+  // it a target worth aiming at (a two-letter glyph is a tiny thing to hit on
+  // a phone), and role/tabindex make it reachable without a pointer at all.
   const labels = axes.map((axis, i) => {
     const a = axisAngle(i, n);
-    const x = cx + Math.cos(a) * (r + labelGap);
-    const y = cy + Math.sin(a) * (r + labelGap);
-    return `<text class="axis-label" x="${x.toFixed(1)}" y="${y.toFixed(1)}"
+    const x = (cx + Math.cos(a) * (r + labelGap)).toFixed(1);
+    const y = (cy + Math.sin(a) * (r + labelGap)).toFixed(1);
+    const text = symbol => `<text class="axis-label" x="${x}" y="${y}"
             text-anchor="middle" dominant-baseline="middle"
-            data-axis="${axis.key}">${axis.symbol}<title>${axis.name}</title></text>`;
+            data-axis="${axis.key}">${symbol}</text>`;
+    if (!pick) return text(`${axis.symbol}<title>${axis.name}</title>`);
+    return `<g class="axis-pick" data-pick="${axis.key}" role="button" tabindex="0"
+            aria-expanded="false" aria-label="${axis.name}">
+        <circle class="axis-hit" cx="${x}" cy="${y}" r="${Math.max(16, labelGap * 0.6).toFixed(1)}"/>
+        ${text(axis.symbol)}
+      </g>`;
   }).join('\n      ');
 
   const flat = Array(n).fill(0);

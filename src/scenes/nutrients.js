@@ -19,8 +19,10 @@ import { NUTRIENTS, RINGS, SAMPLE_BED, COUPLINGS, SEASON,
          evaluate, project, limiting, culprit, lockedFraction,
          noteIndex, allInBand }
   from '../soil/nutrients.js';
+import { FIELDS, entry, hasEntry } from '../soil/glossary.js';
 import { radarHTML, radarOps }  from '../ui/radar.js';
 import { dialHTML, dialOps }    from '../ui/dial.js';
+import { cardOps }              from '../ui/card.js';
 import { clockSVG, seekClock }  from '../art/clock.js';
 
 // The face, from the middle out.
@@ -96,6 +98,8 @@ export function render(el, _store) {
     labelGap: R_LABEL - R_CHART,
     bezel: R_BEZEL,
     webs: 3,
+    // The six letters are the way into the glossary — see the card below.
+    pick: true,
   };
 
   const dialGeom = ring => ({ cx, cy, r: R_DIAL, ...arcFor(ring.key) });
@@ -125,10 +129,18 @@ export function render(el, _store) {
               text-anchor="middle" dominant-baseline="middle"></text>
       </svg>
 
+      <!-- One column, not two. Six bars stacked share a left edge, so their
+           lengths can be compared by eye in a single pass down the list;
+           split across two columns they could only be compared three at a
+           time, and the shortest bar — the whole point of the readout — no
+           longer stands out. -->
       <dl class="levels" data-levels>
         ${NUTRIENTS.map(n => `
         <div class="level" data-level="${n.key}">
-          <dt><abbr title="${n.name}">${n.symbol}</abbr></dt>
+          <dt>${hasEntry(n.key)
+            ? `<button type="button" class="level-name" data-pick="${n.key}"
+                       aria-expanded="false" aria-label="${n.name}">${n.symbol}</button>`
+            : `<abbr title="${n.name}">${n.symbol}</abbr>`}</dt>
           <dd>
             <span class="level-track">
               <span class="level-reserve"   data-level-reserve></span>
@@ -274,6 +286,33 @@ export function render(el, _store) {
     update();
   }));
 
+  // --- the glossary, on demand -------------------------------------------
+  // Two ways in to the same card: the letter on the chart and the label on
+  // the bar beneath it. They are the same term in two places, so they open
+  // the same thing, and either one closes it again.
+  const section = el.querySelector('.instrument');
+  const card    = cardOps(section, FIELDS);
+  const picks   = [...section.querySelectorAll('[data-pick]')];
+
+  function onPick(event) {
+    const trigger = event.currentTarget;
+    const found = entry(trigger.dataset.pick);
+    if (!found) return;
+    // The chart letters are SVG groups, not buttons: Space and Enter have to
+    // be spelled out. On a real <button> the browser has already turned those
+    // into a click, so only the group needs this.
+    if (event.type === 'keydown') {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+    }
+    card.toggle(trigger, { name: NUTRIENTS.find(n => n.key === found.key).name, ...found });
+  }
+
+  picks.forEach(p => {
+    p.addEventListener('click', onPick);
+    if (p.tagName !== 'BUTTON') p.addEventListener('keydown', onPick);
+  });
+
   // The artwork arrives when it arrives; the track works without it.
   let alive = true;
   clockSVG(40).then(markup => {
@@ -283,5 +322,13 @@ export function render(el, _store) {
   });
 
   update();
-  return () => { alive = false; dials.forEach(d => d.destroy()); };
+  return () => {
+    alive = false;
+    dials.forEach(d => d.destroy());
+    picks.forEach(p => {
+      p.removeEventListener('click', onPick);
+      p.removeEventListener('keydown', onPick);
+    });
+    card.destroy();
+  };
 }

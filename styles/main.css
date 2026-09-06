@@ -563,6 +563,9 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   width: 100%;
   max-width: 62rem;
   margin: 0 auto;
+  /* The info card is positioned against this box, so it can be placed beside
+     whichever letter was clicked without costing the document any height. */
+  position: relative;
 }
 
 /* The page has no visible heading — the instrument is the heading. This keeps
@@ -610,6 +613,26 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   font-size: 17px;
   letter-spacing: 0.06em;
   opacity: 0.75;
+  transition: opacity 160ms ease;
+}
+/* A disc behind each letter, so the target is a target and not a glyph. It
+   is the only part of the radar that takes a pointer at all. */
+.axis-hit {
+  fill: transparent;
+  /* `all` rather than `auto`: an unpainted shape is not hit-tested under the
+     SVG default, and this one is deliberately invisible. */
+  pointer-events: all;
+  cursor: pointer;
+}
+.axis-pick:hover .axis-label,
+.axis-pick:focus-visible .axis-label,
+.axis-pick[aria-expanded="true"] .axis-label { opacity: 1; }
+.axis-pick:focus-visible { outline: none; }
+.axis-pick:focus-visible .axis-hit,
+.axis-pick[aria-expanded="true"] .axis-hit {
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.45;
 }
 /* where the reserve stood on day zero — the high-water mark */
 .plot-was {
@@ -757,19 +780,21 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 }
 
 /* --- the same numbers, read rather than seen ------------------------------ */
-/* Two label+bar pairs per row. `display: contents` on .level flattens each
-   pair into the grid, so the columns go label, bar, label, bar. */
+/* One column, centred. `display: contents` on .level flattens each row into
+   the grid, so the columns go label, bar — and every bar starts at the same
+   x. Six lengths sharing a left edge can be read against each other in a
+   single downward glance; that is the entire reason this block exists, and
+   two columns took it away. */
 .levels {
-  margin: 0;
+  margin: 0 auto;
   width: 100%;
-  max-width: 40rem;
+  max-width: 26rem;
   display: grid;
-  grid-template-columns: auto 1fr auto 1fr;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 0.45rem 1.4rem;
+  gap: 0.45rem 1.1rem;
 }
 @media (max-width: 560px) {
-  .levels { grid-template-columns: auto 1fr; }
   .footnote { display: none; }
 }
 
@@ -779,8 +804,26 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   opacity: 0.75;
   text-align: right;
   align-self: center;
+  min-width: 1.6rem;
 }
 .level dt abbr { text-decoration: none; border: 0; }
+/* The same term as the letter on the chart, and the same card behind it. */
+.level-name {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-bottom: 1px dotted currentColor;
+  line-height: 1.2;
+}
+.level-name:hover,
+.level-name[aria-expanded="true"] { border-bottom-style: solid; opacity: 1; }
+.level-name:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 3px;
+}
 .level dd {
   margin: 0;
   display: flex;
@@ -820,6 +863,83 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 /* held back rather than absent — the distinction the page is about */
 .level.is-locked dt,
 .level.is-locked .level-figure { opacity: 1; color: #E4746B; }
+
+/* --- the info card -------------------------------------------------------- */
+/* Absolutely positioned against .instrument, so it floats over the face and
+   the document never changes height when one opens. */
+.card {
+  position: absolute;
+  z-index: 20;
+  width: min(21rem, calc(100% - 1.25rem));
+  /* Bounded in JS to the host as well, so it can never be taller than the
+     thing it floats over. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.8rem 0.9rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.45);
+  text-align: left;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.card:focus-visible { outline: none; }
+/* Only when there is more below. A sticky pseudo-element inside the scroller
+   stays pinned to its bottom edge, so the fade means "keep reading" rather
+   than decorating a card that has already finished. */
+.card.is-scrollable::after {
+  content: '';
+  display: block;
+  position: sticky;
+  bottom: -0.85rem;
+  height: 2rem;
+  margin: -2rem -0.9rem -0.85rem;
+  background: linear-gradient(to bottom, transparent, var(--panel));
+  pointer-events: none;
+}
+
+.card-close {
+  float: right;
+  margin: -0.25rem -0.3rem 0 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+}
+.card-close svg { width: 12px; height: 12px; }
+.card-close:hover { opacity: 1; background: var(--hover); }
+
+.card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.card-tagline {
+  margin: 0.1rem 0 0.55rem;
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+.card-body { margin: 0; }
+/* Labels are signposts, not headings — small, quiet, and the same every time
+   so the eye learns where to jump. */
+.card-body dt {
+  font-size: 0.63rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-top: 0.55rem;
+}
+.card-body dt:first-child { margin-top: 0; }
+.card-body dd { margin: 0.1rem 0 0; }
 
 /* Everything the verdict might say occupies the same grid cell, so the block
    is always as tall as its longest line and the page never resizes mid-drag. */
