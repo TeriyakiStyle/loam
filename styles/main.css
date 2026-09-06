@@ -582,7 +582,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   /* The canvas is wider than it is tall (the zone names need room at the ends
      of the arc), so height alone would leave the dial looking small. Take the
      lesser of the two budgets and let whichever is scarcer decide. */
-  height: min(clamp(180px, 44vh, 470px), 40vw);
+  height: min(clamp(180px, 42vh, 470px), 40vw);
   width: auto;
   max-width: 100%;
   overflow: visible;
@@ -636,6 +636,17 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 }
 
 /* --- dial ----------------------------------------------------------------- */
+/* Everything decorative is transparent to the pointer. The tick marks are
+   drawn after the hit arc and sit exactly on top of it, so without this a
+   click on a labelled tick — pH 7, say, dead centre of the arc — lands on the
+   tick and does nothing at all. Only the hit arc and the marker take input. */
+.dial-track, .dial-sweet, .dial-ticks, .dial-tick, .dial-tick-label,
+.dial-reading, .dial-value, .dial-zone,
+.web, .spoke, .web-bezel, .axis-label,
+.plot-reserve, .plot-available, [data-dots] {
+  pointer-events: none;
+}
+
 .dial-track {
   fill: none;
   stroke-width: 7;
@@ -779,6 +790,8 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   transition: opacity 200ms ease;
 }
 .verdict-note.is-on { opacity: 0.7; visibility: visible; }
+/* A coupling is the surprising thing on screen, so it gets to look like it. */
+.verdict-note.is-coupled.is-on { opacity: 0.92; }
 
 .footnote {
   margin: 0;
@@ -793,7 +806,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
    Nothing here should ever push the dial below the fold — you cannot drag
    what you cannot see. */
 @media (max-height: 860px) {
-  .instrument { gap: 0.45rem; padding-bottom: 0.75rem; }
+  .instrument { gap: 0.4rem; padding-bottom: 0.6rem; }
   .footnote { font-size: 0.72rem; }
   .levels { gap: 0.3rem 1.2rem; }
 }

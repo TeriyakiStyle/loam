@@ -1,64 +1,90 @@
 // ---------------------------------------------------------------------------
 // NUTRIENTS — the instrument.
 //
-// Rings on the outside are the environment. The chart in the middle is what
-// the plant actually gets. Move a ring and watch the middle change shape.
+// Three arcs on one ring: pH over the top, temperature at the lower left,
+// water at the lower right. Inside them, what the plant actually gets.
 //
-// This file only assembles: it asks soil/nutrients.js what exists, hands the
-// geometry to ui/radar.js and ui/dial.js, and wires the two together. Adding
-// a second ring means adding it to RINGS — nothing here changes.
+// Every arc runs from one failure to its opposite with the good ground in the
+// middle, and each arc is placed so its own middle points outward. So when
+// all three are where they should be, the three markers sit at the top of
+// their own arcs and form an equilateral triangle. Lopsided means something
+// is off, and which way it leans says what — a reading you get before you
+// read a single number.
+//
+// This file only assembles. It asks soil/nutrients.js what exists, hands the
+// geometry to ui/radar.js and ui/dial.js, and wires the two together.
 // ---------------------------------------------------------------------------
 
-import { NUTRIENTS, RINGS, SAMPLE_BED, evaluate, limiting, lockedFraction, noteIndex }
+import { NUTRIENTS, RINGS, SAMPLE_BED, COUPLINGS,
+         evaluate, limiting, culprit, lockedFraction, noteIndex, allInBand }
   from '../soil/nutrients.js';
 import { radarHTML, radarOps } from '../ui/radar.js';
 import { dialHTML, dialOps }   from '../ui/dial.js';
 
-// The face, from the middle out. The hexagon floats at the centre, the axis
-// letters ride a circle of their own, the bezel encloses them both, and the
-// environment dials sit outside all of it.
+// The face, from the middle out.
 const R_CHART = 92;    // hexagon at full value
 const R_LABEL = 130;   // where the letters sit
 const R_BEZEL = 164;   // the circle around them
-const R_FIRST = 198;   // the first dial
-const R_STEP  = 36;    // and each one after it
+const R_DIAL  = 198;   // every dial rides this one ring
 
-const ringRadius = i => R_FIRST + i * R_STEP;
+// Three equal arcs with equal gaps, centred on the top, the lower left and
+// the lower right. SVG degrees: 270 is up, 150 is lower left, 30 is lower
+// right. Each arc's midpoint is its ring's ideal, which is what makes the
+// triangle mean something.
+//
+// `flip` mirrors an arc's direction. The two lower dials both put their
+// minimum at the bottom of the face and climb outward — cold at the bottom
+// rising to hot up the left, dry at the bottom rising to drowned up the
+// right. Without it one of them runs backwards against the other and the
+// pair reads as a mistake.
+const ARC_SPAN = 106;
+const ARCS = {
+  ph:       { centre: 270, flip: false },   // acid left, alkaline right
+  temp:     { centre: 150, flip: false },   // cold at the bottom
+  moisture: { centre:  30, flip: true  },   // dry at the bottom
+};
+
+const arcFor = key => {
+  const { centre, flip } = ARCS[key];
+  const lo = centre - ARC_SPAN / 2;
+  const hi = centre + ARC_SPAN / 2;
+  return flip ? { a0: hi, a1: lo } : { a0: lo, a1: hi };
+};
 
 export function render(el, _store) {
-  // The canvas grows with the number of rings, so a third ring never gets
-  // clipped — it just makes the drawing wider and taller.
-  //
-  // It is not square: the dials are half-circles over the top, so below the
-  // centre there is only the chart and its labels. Cropping that dead space
-  // is what keeps the page from scrolling on a laptop.
-  const outer  = ringRadius(RINGS.length - 1);
-  // Wide enough for the longest zone name the reading can show, which lands
-  // at the very end of the arc where there is least room: "very strongly
-  // alkaline" is 160px across at pH 14. Measured, not guessed.
-  const margin = 142;                       // tick labels and the live reading
-  const above  = outer + margin;
-  const below  = R_BEZEL + 22;              // the bezel, plus a little air
-  const width  = above * 2;
-  const height = above + below;
-  const cx = width / 2;
-  const cy = above;
+  // Sized from the furthest thing drawn: a reading riding the outside of an
+  // arc, plus the widest zone name it can show. Measured rather than guessed —
+  // "very strongly alkaline" at the end of the pH arc is the worst case.
+  const margin = 134;
+  const half   = R_DIAL + margin;
+  const size   = half * 2;
+  const cx = half;
+  const cy = half;
+
   const geom = {
     cx, cy,
     r: R_CHART,
     labelGap: R_LABEL - R_CHART,
     bezel: R_BEZEL,
-    webs: 3,        // fewer gridlines now the hexagon is smaller
+    webs: 3,
   };
+
+  const dialGeom = ring => ({ cx, cy, r: R_DIAL, ...arcFor(ring.key) });
+
+  // Every message the page can ever show, laid out at once. See the verdict
+  // block below for why.
+  const MESSAGES = [
+    ...RINGS.flatMap(ring => ring.notes.map((n, i) => ({ id: `${ring.key}-${i}`, text: n.text }))),
+    ...COUPLINGS.map(c => ({ id: `x-${c.key}`, text: c.text, coupled: true })),
+  ];
 
   el.innerHTML = `
     <section class="instrument">
       <h1 class="sr-only">Nutrients</h1>
 
-      <svg viewBox="0 0 ${width} ${height}" class="scope-svg"
+      <svg viewBox="0 0 ${size} ${size}" class="scope-svg"
            role="group" aria-label="Nutrient availability">
-        ${RINGS.map((ring, i) =>
-          dialHTML(ring, { cx, cy, r: ringRadius(i) })).join('\n        ')}
+        ${RINGS.map(ring => dialHTML(ring, dialGeom(ring))).join('\n        ')}
         ${radarHTML(NUTRIENTS, geom)}
       </svg>
 
@@ -79,25 +105,27 @@ export function render(el, _store) {
       <!-- Every line the verdict can ever show is laid out here at once, in a
            single grid cell, with the inactive ones merely invisible. The block
            is therefore always as tall as its tallest possible contents, so
-           dragging the dial cannot change the height of the document — which
-           is what made the page twitch as the text got longer or shorter. -->
+           dragging a dial cannot change the height of the document — which is
+           what made the page twitch as the text got longer or shorter. -->
       <div class="verdict">
         <div class="stack">
           <p class="verdict-line" data-verdict></p>
           <p class="verdict-line is-sizer" aria-hidden="true">
             <strong>Phosphorus</strong> is the limit here, at 100% — and
-            100% of everything in this soil is out of reach.</p>
+            100% of everything in this soil is out of reach. The temperature
+            is what's holding it.</p>
         </div>
         <div class="stack">
-          ${RINGS[0].notes.map((n, i) => `
-          <p class="verdict-note" data-note="${i}">${n.text}</p>`).join('')}
+          ${MESSAGES.map(m => `
+          <p class="verdict-note${m.coupled ? ' is-coupled' : ''}"
+             data-note="${m.id}">${m.text}</p>`).join('')}
         </div>
       </div>
 
       <p class="footnote">
         Faint outline: what the soil holds. Solid: what the roots can reach.
-        Availability curves follow the standard Truog bands — a teaching
-        figure, not a reading from any particular soil.
+        Availability curves follow the standard bands — a teaching figure, not
+        a reading from any particular soil.
       </p>
     </section>
   `;
@@ -105,7 +133,8 @@ export function render(el, _store) {
   const svg     = el.querySelector('.scope-svg');
   const radar   = radarOps(svg, geom);
   const verdict = el.querySelector('[data-verdict]');
-  const notes   = [...el.querySelectorAll('[data-note]')];
+  const notes   = new Map([...el.querySelectorAll('[data-note]')]
+    .map(node => [node.dataset.note, node]));
   const levels  = Object.fromEntries([...el.querySelectorAll('[data-level]')]
     .map(node => [node.dataset.level, {
       node,
@@ -117,7 +146,7 @@ export function render(el, _store) {
   const values = Object.fromEntries(RINGS.map(r => [r.key, r.start]));
 
   function update() {
-    const rows = evaluate(SAMPLE_BED, values);
+    const { rows, fired } = evaluate(SAMPLE_BED, values);
     radar.set(rows);
 
     for (const row of rows) {
@@ -132,18 +161,31 @@ export function render(el, _store) {
 
     const worst  = limiting(rows);
     const locked = lockedFraction(rows);
-    verdict.innerHTML =
-      `<strong>${worst.name}</strong> is the limit here, at
-       ${Math.round(worst.available * 100)}% — and
-       ${Math.round(locked * 100)}% of everything in this soil is out of reach.`;
+    // With one dial you always knew what changed. With three you don't, so
+    // the verdict has to name the ring, not just the nutrient.
+    const blame  = culprit(worst);
+    // Opening on a healthy bed and saying "X is the LIMIT" reads like an
+    // alarm. When all three dials are in their bands there is nothing wrong —
+    // there is just a ceiling, which is a different sentence.
+    verdict.innerHTML = allInBand(values)
+      ? `All three dials are in their working range. <strong>${worst.name}</strong>
+         is still the ceiling at ${Math.round(worst.available * 100)}%, and
+         ${Math.round(locked * 100)}% of this soil stays out of reach even here.`
+      : `<strong>${worst.name}</strong> is the limit here, at
+         ${Math.round(worst.available * 100)}% — and
+         ${Math.round(locked * 100)}% of everything in this soil is out of reach.
+         The ${blame.noun} is what's holding it.`;
 
-    // Show one note, hide the rest. They all keep their space.
-    const active = noteIndex(RINGS[0], values[RINGS[0].key]);
-    notes.forEach((node, i) => node.classList.toggle('is-on', i === active));
+    // A coupling that has fired outranks any single ring's note: it is the
+    // surprising thing on screen, so it is the thing worth explaining.
+    const showing = fired.length
+      ? `x-${fired[0].key}`
+      : `${blame.key}-${noteIndex(blame, values[blame.key])}`;
+    for (const [id, node] of notes) node.classList.toggle('is-on', id === showing);
   }
 
-  const dials = RINGS.map((ring, i) =>
-    dialOps(svg, ring, { cx, cy, r: ringRadius(i) }, v => {
+  const dials = RINGS.map(ring =>
+    dialOps(svg, ring, dialGeom(ring), v => {
       values[ring.key] = v;
       update();
     }));
