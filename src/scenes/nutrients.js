@@ -15,17 +15,20 @@
 // geometry to ui/radar.js and ui/dial.js, and wires the two together.
 // ---------------------------------------------------------------------------
 
-import { NUTRIENTS, RINGS, SAMPLE_BED, COUPLINGS,
-         evaluate, limiting, culprit, lockedFraction, noteIndex, allInBand }
+import { NUTRIENTS, RINGS, SAMPLE_BED, COUPLINGS, SEASON,
+         evaluate, project, limiting, culprit, lockedFraction,
+         noteIndex, allInBand }
   from '../soil/nutrients.js';
-import { radarHTML, radarOps } from '../ui/radar.js';
-import { dialHTML, dialOps }   from '../ui/dial.js';
+import { radarHTML, radarOps }  from '../ui/radar.js';
+import { dialHTML, dialOps }    from '../ui/dial.js';
+import { clockSVG, seekClock }  from '../art/clock.js';
 
 // The face, from the middle out.
 const R_CHART = 92;    // hexagon at full value
 const R_LABEL = 130;   // where the letters sit
 const R_BEZEL = 164;   // the circle around them
 const R_DIAL  = 198;   // every dial rides this one ring
+const R_SEASON = 308;  // and the sun crosses outside all of it
 
 // Three arcs, and the shares are the hierarchy. SVG degrees: 270 is up, 90
 // is down, 0 is right.
@@ -67,6 +70,11 @@ const arcFor = key => {
   return { ...(flip ? { a0: hi, a1: lo } : { a0: lo, a1: hi }), tone };
 };
 
+// The season crosses the sky: dawn on the left, ninety days later on the
+// right, above everything else on the face. It is not a condition and it
+// modulates nothing — it is a clock, and what it changes is the reserve.
+const SEASON_ARC = { a0: 180, a1: 360, tone: 'season' };
+
 export function render(el, _store) {
   // Not square, and that is what makes the drawing big. The pH arc now ends
   // at the horizontal, which is exactly where its longest zone names sit, so
@@ -75,11 +83,12 @@ export function render(el, _store) {
   // the vertical margin is worth more than the extra width costs, because the
   // instrument is sized by its height.
   const marginX = 170;   // the long zone names at the ends of the pH arc
-  const marginY = 96;    // the reading above the apex, the lower arcs below
+  const marginY = 96;    // the lower arcs and their readings
+  const marginTop = R_SEASON - R_DIAL + 26;   // the sun, and room to ride
   const width  = (R_DIAL + marginX) * 2;
-  const height = (R_DIAL + marginY) * 2;
+  const height = (R_DIAL + marginTop) + (R_DIAL + marginY);
   const cx = width / 2;
-  const cy = height / 2;
+  const cy = R_DIAL + marginTop;
 
   const geom = {
     cx, cy,
@@ -104,8 +113,16 @@ export function render(el, _store) {
 
       <svg viewBox="0 0 ${width} ${height}" class="scope-svg"
            role="group" aria-label="Nutrient availability">
+        ${dialHTML(SEASON, { cx, cy, r: R_SEASON, ...SEASON_ARC,
+                             marker: '<circle class="clock-fallback" r="13"/>' })}
         ${RINGS.map(ring => dialHTML(ring, dialGeom(ring))).join('\n        ')}
         ${radarHTML(NUTRIENTS, geom)}
+
+        <!-- The day count lives in the middle of the chart, where there is
+             room for it and nothing else wants to be. Hidden on day zero, so
+             the page still opens as the instrument it was. -->
+        <text class="day-count" data-days x="${cx}" y="${cy}"
+              text-anchor="middle" dominant-baseline="middle"></text>
       </svg>
 
       <dl class="levels" data-levels>
@@ -116,6 +133,7 @@ export function render(el, _store) {
             <span class="level-track">
               <span class="level-reserve"   data-level-reserve></span>
               <span class="level-available" data-level-available></span>
+              <span class="level-was"       data-level-was></span>
             </span>
             <span class="level-figure" data-level-figure></span>
           </dd>
@@ -133,7 +151,9 @@ export function render(el, _store) {
           <p class="verdict-line is-sizer" aria-hidden="true">
             <strong>Phosphorus</strong> is the limit here, at 100% — and
             100% of everything in this soil is out of reach. The temperature
-            is what's holding it.</p>
+            is what's holding it. Held here for 90 days, this soil loses 100%
+            of what it started with — <em>almost none of it into a crop</em>: it is
+            leaching away and gassing off.</p>
         </div>
         <div class="stack">
           ${MESSAGES.map(m => `
@@ -143,9 +163,10 @@ export function render(el, _store) {
       </div>
 
       <p class="footnote">
-        Faint outline: what the soil holds. Solid: what the roots can reach.
-        Availability curves follow the standard bands — a teaching figure, not
-        a reading from any particular soil.
+        Solid: what the roots can reach. Dashed: what the soil holds. Dotted,
+        once the sun has moved: where it stood on day one. Availability follows
+        the standard bands; the depletion rates are round numbers chosen to
+        behave right, not measurements.
       </p>
     </section>
   `;
@@ -160,19 +181,35 @@ export function render(el, _store) {
       node,
       reserve:   node.querySelector('[data-level-reserve]'),
       available: node.querySelector('[data-level-available]'),
+      was:       node.querySelector('[data-level-was]'),
       figure:    node.querySelector('[data-level-figure]'),
     }]));
 
   const values = Object.fromEntries(RINGS.map(r => [r.key, r.start]));
+  let days = SEASON.start;
+
+  const dayText = el.querySelector('[data-days]');
 
   function update() {
-    const { rows, fired } = evaluate(SAMPLE_BED, values);
-    radar.set(rows);
+    // Time first: run the reserves forward, then read availability off what
+    // is left. Availability is a property of today's conditions; the reserve
+    // is what the season has done to the soil.
+    const ahead = project(SAMPLE_BED, values, days);
+    const { rows, fired } = evaluate(ahead.reserves, values);
+    // Where each reserve stood before the season ran, so the chart can show
+    // what has been taken out as well as what is locked away.
+    radar.set(days ? rows.map(r => ({ ...r, was: SAMPLE_BED[r.key] })) : rows);
+
+    dayText.textContent = days > 0 ? `DAY ${days}` : '';
 
     for (const row of rows) {
       const level = levels[row.key];
+      const was   = SAMPLE_BED[row.key];
       level.reserve.style.width   = `${(row.reserve   * 100).toFixed(1)}%`;
       level.available.style.width = `${(row.available * 100).toFixed(1)}%`;
+      // A ghost of where this nutrient started, so the retreat is visible.
+      level.was.style.width       = `${(was * 100).toFixed(1)}%`;
+      level.was.hidden            = !days;
       level.figure.textContent    = `${Math.round(row.available * 100)}%`;
       // Under half of its own reserve means held back, not absent — which is
       // the distinction the whole page exists to make.
@@ -181,13 +218,15 @@ export function render(el, _store) {
 
     const worst  = limiting(rows);
     const locked = lockedFraction(rows);
+    const taken  = NUTRIENTS.reduce((s, n) => s + ahead.uptake[n.key], 0);
+    const wasted = NUTRIENTS.reduce((s, n) => s + ahead.waste[n.key], 0);
     // With one dial you always knew what changed. With three you don't, so
     // the verdict has to name the ring, not just the nutrient.
     const blame  = culprit(worst);
     // Opening on a healthy bed and saying "X is the LIMIT" reads like an
     // alarm. When all three dials are in their bands there is nothing wrong —
     // there is just a ceiling, which is a different sentence.
-    verdict.innerHTML = allInBand(values)
+    const today = allInBand(values)
       ? `All three dials are in their working range. <strong>${worst.name}</strong>
          is still the ceiling at ${Math.round(worst.available * 100)}%, and
          ${Math.round(locked * 100)}% of this soil stays out of reach even here.`
@@ -195,6 +234,23 @@ export function render(el, _store) {
          ${Math.round(worst.available * 100)}% — and
          ${Math.round(locked * 100)}% of everything in this soil is out of reach.
          The ${blame.noun} is what's holding it.`;
+
+    // The two doors. Same falling number, opposite meaning: one of these is a
+    // harvest and the other is a leak, and saying which is the whole reason
+    // the projection is worth having.
+    const gone  = taken + wasted;
+    const start = NUTRIENTS.reduce((s, n) => s + SAMPLE_BED[n.key], 0);
+    const kept  = gone > 0 ? taken / gone : 0;
+    const ledger = !days ? ''
+      : ` Held here for ${days} days, this soil loses
+          ${Math.round(gone / start * 100)}% of what it started with —
+          ${kept >= 0.6 ? `<em>most of it into the crop</em>, which is what a
+             harvest is`
+           : kept <= 0.25 ? `<em>almost none of it into a crop</em>: it is
+             leaching away and gassing off`
+           : `<em>about half into the crop</em>, the rest leaching away`}.`;
+
+    verdict.innerHTML = today + ledger;
 
     // A coupling that has fired outranks any single ring's note: it is the
     // surprising thing on screen, so it is the thing worth explaining.
@@ -210,6 +266,22 @@ export function render(el, _store) {
       update();
     }));
 
+  const clock = svg.querySelector(`[data-dial="${SEASON.key}"] [data-marker]`);
+  dials.push(dialOps(svg, SEASON, { cx, cy, r: R_SEASON, ...SEASON_ARC }, v => {
+    days = v;
+    const art = clock.querySelector('.clock-art');
+    if (art) seekClock(art, v);
+    update();
+  }));
+
+  // The artwork arrives when it arrives; the track works without it.
+  let alive = true;
+  clockSVG(40).then(markup => {
+    if (!alive || !markup) return;
+    clock.innerHTML = markup;
+    seekClock(clock.querySelector('.clock-art'), days);
+  });
+
   update();
-  return () => dials.forEach(d => d.destroy());
+  return () => { alive = false; dials.forEach(d => d.destroy()); };
 }

@@ -415,6 +415,142 @@ export const SAMPLE_BED = {
   N: 0.72, S: 0.80, K: 0.86, Ca: 0.90, P: 0.78, Mg: 0.82,
 };
 
+// ---------------------------------------------------------------------------
+// TIME — what leaves, and where it goes.
+//
+// The rings say what a plant can REACH today. This says what is still there in
+// six weeks, and the difference between those two questions is the whole point
+// of the season track.
+//
+// Nutrients leave a soil by two doors, and they look identical on a falling
+// number:
+//
+//   UPTAKE  into the crop. This is fastest when conditions are BEST, because
+//           something is actually growing. A bed at its ideal drains nitrogen
+//           quickest of all — and that nitrogen became food.
+//   WASTE   into the water table and the sky. Nitrate leaches (nothing holds
+//           an anion), denitrifying bacteria gas it off when waterlogged,
+//           ammonia volatilises off alkaline ground. Nothing to show for it.
+//
+// Same curve down, opposite meaning. Keeping them apart is what stops "your
+// soil is emptying" from reading as a failure when it is a harvest.
+//
+// A caution worth keeping: the availability curves above rest on a textbook
+// standard. These rates do not. How fast nitrogen actually leaves a soil turns
+// on rainfall, texture, crop and form far more than availability does — so
+// these are round numbers chosen to behave right, not measurements. Coarse on
+// purpose.
+// ---------------------------------------------------------------------------
+
+// Half-life in days at FULL growth: what a thriving crop removes.
+const UPTAKE_HALFLIFE = { N: 70, S: 200, K: 90, Ca: 340, P: 260, Mg: 380 };
+
+// Half-life in days under neutral conditions: the background trickle away.
+const WASTE_HALFLIFE  = { N: 220, S: 240, K: 500, Ca: 1100, P: 4000, Mg: 950 };
+
+// How much a nutrient moves when water moves. Anions ride straight down with
+// the drainage; cations are held on the exchange sites and go slowly.
+// Phosphorus barely moves at all — it gets fixed in place, not washed away.
+const MOBILITY = { N: 1.0, S: 0.85, K: 0.45, Ca: 0.25, P: 0.05, Mg: 0.30 };
+
+const LN2 = Math.LN2;
+const clamp01 = x => Math.min(1, Math.max(0, x));
+
+/** How hard this soil is leaching, and how much of it reaches each nutrient. */
+function wasteRate(key, values) {
+  // Leaching needs water to spare. Below field capacity there is none.
+  const excess = clamp01((values.moisture - 95) / 55);
+  let m = 1 + 6 * excess * MOBILITY[key];
+
+  if (key === 'N') {
+    // Denitrification: anaerobic AND warm. The bacteria doing it are
+    // themselves fastest in warm ground, so heat makes this worse, not better.
+    m *= 1 + 5 * clamp01((values.moisture - 105) / 45) * clamp01((values.temp - 10) / 20);
+    // Ammonia off an alkaline surface.
+    m *= 1 + 2 * clamp01((values.ph - 7.5) / 2);
+  }
+  return (LN2 / WASTE_HALFLIFE[key]) * m;
+}
+
+/**
+ * Where these reserves would be after `days` of holding these conditions.
+ *
+ * A projection, not a history: it answers "if you left it like this", which is
+ * what makes the track scrubbable in both directions. A real history would
+ * depend on where the dials had been along the way, and the page does not
+ * know that.
+ *
+ * @returns { reserves, uptake, waste } — the last two are what LEFT, per
+ *          nutrient, split by which door it went out of.
+ */
+export function project(reserves, values, days, rings = RINGS, couplings = COUPLINGS) {
+  const out = { reserves: {}, uptake: {}, waste: {} };
+  if (!days) {
+    for (const n of NUTRIENTS) {
+      out.reserves[n.key] = reserves[n.key] ?? 0;
+      out.uptake[n.key] = 0;
+      out.waste[n.key] = 0;
+    }
+    return out;
+  }
+
+  // Liebig again: the crop grows at the rate of its scarcest input, so a bed
+  // held back by nitrogen removes little of anything else.
+  const today = evaluate(reserves, values, rings, couplings).rows;
+  const growth = today.reduce((lo, r) => Math.min(lo, r.available), 1);
+
+  for (const n of NUTRIENTS) {
+    const held = reserves[n.key] ?? 0;
+    const kUp  = (LN2 / UPTAKE_HALFLIFE[n.key]) * growth;
+    const kOut = wasteRate(n.key, values);
+    const k    = kUp + kOut;
+
+    const left = held * Math.exp(-k * days);
+    const lost = held - left;
+    const share = k > 0 ? kUp / k : 0;
+
+    out.reserves[n.key] = left;
+    out.uptake[n.key]   = lost * share;
+    out.waste[n.key]    = lost * (1 - share);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// THE SEASON TRACK
+//
+// Ring-shaped so the dial component can draw it, but it is NOT in RINGS: it
+// changes nothing about availability. It is a clock, and the sun riding it is
+// the marker.
+//
+// Ninety days at one lunation per 29 of them means about three moons cross the
+// track end to end, which is a very old way of saying a season.
+// ---------------------------------------------------------------------------
+export const SEASON = {
+  key: 'days',
+  label: 'Day',
+  noun: 'time',
+  min: 0,
+  max: 90,
+  start: 0,
+  step: 1,
+  ticks: [0, 30, 60, 90],
+  format: v => v.toFixed(0),
+  zones: [
+    { upTo: 0,        label: 'today'      },
+    { upTo: 21,       label: 'three weeks' },
+    { upTo: 45,       label: 'six weeks'  },
+    { upTo: 70,       label: 'ten weeks'  },
+    { upTo: Infinity, label: 'a season'   },
+  ],
+  // Quiet: this track is a path for the sun, not another reading to compare.
+  ramp: [
+    [0,  'hsl(38, 20%, 46%)'],
+    [45, 'hsl(38, 14%, 40%)'],
+    [90, 'hsl(220, 16%, 38%)'],
+  ],
+};
+
 /** Index of the note that applies at this value. */
 export function noteIndex(ring, value) {
   return ring.notes.findIndex(n => value <= n.upTo);

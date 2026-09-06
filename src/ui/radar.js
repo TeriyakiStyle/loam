@@ -1,9 +1,16 @@
 // ---------------------------------------------------------------------------
 // RADAR
 //
-// Two polygons on one set of axes. The faint one is what the soil HOLDS; the
-// solid one is what the plant can REACH. The gap between them is the whole
-// argument of the page, so it is drawn rather than explained.
+// Up to three polygons on one set of axes:
+//
+//   was        the faintest — where the reserve stood on day zero. Only drawn
+//              once the season track has moved off today.
+//   reserve    what the soil HOLDS now.
+//   available  what the plant can REACH.
+//
+// The gap between the last two is what pH and the rest are locking away. The
+// gap between the first two is what the season has taken out of the soil
+// altogether. Two different losses, and they are different lines.
 //
 // Knows nothing about soil. Give it axes and two arrays of 0–1 values.
 // ---------------------------------------------------------------------------
@@ -70,6 +77,7 @@ export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4 
       ${ring}
       ${rings}
       ${spokes}
+      <path class="plot-was"       data-was      d="M${polygon(cx, cy, r, flat)} Z" hidden/>
       <path class="plot-reserve"   data-reserve  d="M${polygon(cx, cy, r, flat)} Z"/>
       <path class="plot-available" data-available d="M${polygon(cx, cy, r, flat)} Z"/>
       <g data-dots></g>
@@ -79,6 +87,7 @@ export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4 
 
 /** Live handle: feed it rows, it moves the polygons. */
 export function radarOps(root, { cx, cy, r }) {
+  const was       = root.querySelector('[data-was]');
   const reserve   = root.querySelector('[data-reserve]');
   const available = root.querySelector('[data-available]');
   const dots      = root.querySelector('[data-dots]');
@@ -87,6 +96,14 @@ export function radarOps(root, { cx, cy, r }) {
   return {
     set(rows) {
       const n = rows.length;
+      // `was` is optional: pass it and the high-water mark appears.
+      const marks = rows.map(x => x.was);
+      if (marks.every(v => typeof v === 'number')) {
+        was.setAttribute('d', `M${polygon(cx, cy, r, marks)} Z`);
+        was.hidden = false;
+      } else {
+        was.hidden = true;
+      }
       reserve.setAttribute('d',   `M${polygon(cx, cy, r, rows.map(x => x.reserve))} Z`);
       available.setAttribute('d', `M${polygon(cx, cy, r, rows.map(x => x.available))} Z`);
 

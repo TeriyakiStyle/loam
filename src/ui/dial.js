@@ -36,12 +36,12 @@ const DEG = Math.PI / 180;
 // labels at r + 19, and on the diagonal arcs radial separation projects into
 // much less horizontal separation — so this is set from the worst case, not
 // from how it looks at the top of the circle.
-const VALUE_GAP = { primary: 68, secondary: 64 };
+const VALUE_GAP = { primary: 68, secondary: 64, season: 0 };
 
 // The primary dial is drawn heavier throughout. Stroke weights and type sizes
 // live in the stylesheet; these are the bits SVG needs as attributes.
-const KNOB = { primary: 9, secondary: 7.5 };
-const PIP  = { primary: 3.2, secondary: 2.6 };
+const KNOB = { primary: 9, secondary: 7.5, season: 0 };
+const PIP  = { primary: 3.2, secondary: 2.6, season: 0 };
 
 const at = (cx, cy, r, deg) => [cx + Math.cos(deg * DEG) * r, cy + Math.sin(deg * DEG) * r];
 
@@ -51,7 +51,7 @@ const at = (cx, cy, r, deg) => [cx + Math.cos(deg * DEG) * r, cy + Math.sin(deg 
  * @param ring  a definition from RINGS
  * @param geom  { cx, cy, r, a0, a1 }
  */
-export function dialHTML(ring, { cx, cy, r, a0, a1, tone = 'primary' }) {
+export function dialHTML(ring, { cx, cy, r, a0, a1, tone = 'primary', marker = '' }) {
   const span = ring.max - ring.min;
   const norm = v => (v - ring.min) / span;
   const angleOf = t => a0 + t * (a1 - a0);
@@ -103,7 +103,13 @@ export function dialHTML(ring, { cx, cy, r, a0, a1, tone = 'primary' }) {
 
   const [mx, my] = at(cx, cy, r, angleOf(norm(ring.start)));
   const [vx, vy] = at(cx, cy, r + VALUE_GAP[tone], angleOf(norm(ring.start)));
-  const zoned = Boolean(ring.zones);
+  const zoned = Boolean(ring.zones) && VALUE_GAP[tone] > 0;
+
+  // A dial can bring its own marker — the season track rides a sun rather
+  // than a knob. Anything passed here is swapped in whole; the group around
+  // it still carries the slider role and the keyboard handling.
+  const knob = marker || `<circle class="dial-knob" r="${KNOB[tone]}"/>
+        <circle class="dial-pip"  r="${PIP[tone]}"/>`;
 
   return `<g class="dial dial--${tone}" data-dial="${ring.key}">
       <defs>
@@ -127,14 +133,13 @@ export function dialHTML(ring, { cx, cy, r, a0, a1, tone = 'primary' }) {
          aria-label="${ring.label}"
          aria-valuemin="${ring.min}" aria-valuemax="${ring.max}"
          aria-valuenow="${ring.start}" aria-valuetext="${ring.format(ring.start)}">
-        <circle class="dial-knob" r="${KNOB[tone]}"/>
-        <circle class="dial-pip"  r="${PIP[tone]}"/>
+        ${knob}
       </g>
 
       <!-- The reading rides along with the marker rather than sitting in a
            corner: the number and the thing it measures stay together. The
            whole group is translated, so both lines move as one. -->
-      <g class="dial-reading" data-dial-reading aria-hidden="true"
+      ${VALUE_GAP[tone] === 0 ? '' : `<g class="dial-reading" data-dial-reading aria-hidden="true"
          transform="translate(${vx.toFixed(1)} ${vy.toFixed(1)})">
         <text class="dial-value" data-dial-value
               text-anchor="middle" dominant-baseline="middle"
@@ -142,7 +147,7 @@ export function dialHTML(ring, { cx, cy, r, a0, a1, tone = 'primary' }) {
         ${zoned ? `<text class="dial-zone" data-dial-zone
               text-anchor="middle" dominant-baseline="middle"
               y="8">${zoneLabel(ring, ring.start)}</text>` : ''}
-      </g>
+      </g>`}
     </g>`;
 }
 
@@ -181,17 +186,17 @@ export function dialOps(root, ring, { cx, cy, r, a0, a1, tone = 'primary' }, onC
     marker.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
     marker.setAttribute('aria-valuenow', value.toFixed(2));
 
-    value$.textContent = `${ring.label} ${ring.format(value)}`;
     const zone = zoneLabel(ring, value);
-    if (zone$) zone$.textContent = zone;
+    if (value$) value$.textContent = `${ring.label} ${ring.format(value)}`;
+    if (zone$)  zone$.textContent = zone;
 
     // Text first, then position: the reading is nudged back inside the canvas
     // if a long zone name would hang off the edge. Without this the canvas has
     // to be sized for the widest word the dial can ever say, which leaves the
     // instrument itself small and a lot of empty margin around it.
     const [vx, vy] = at(cx, cy, r + gap, a);
-    reading.setAttribute('transform', `translate(${vx.toFixed(1)} ${vy.toFixed(1)})`);
-    if (view) {
+    if (reading) reading.setAttribute('transform', `translate(${vx.toFixed(1)} ${vy.toFixed(1)})`);
+    if (reading && view) {
       try {
         const bb = reading.getBBox();
         if (bb.width) {

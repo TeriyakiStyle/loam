@@ -582,7 +582,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   /* The canvas is wider than it is tall (the zone names need room at the ends
      of the arc), so height alone would leave the dial looking small. Take the
      lesser of the two budgets and let whichever is scarcer decide. */
-  height: min(clamp(190px, 58vh, 560px), 46vw, 100vh - 430px);
+  height: min(clamp(190px, 50vh, 560px), 46vw, 100vh - 508px);
   width: auto;
   max-width: 100%;
   overflow: visible;
@@ -611,6 +611,17 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   letter-spacing: 0.06em;
   opacity: 0.75;
 }
+/* where the reserve stood on day zero — the high-water mark */
+.plot-was {
+  fill: none;
+  stroke: currentColor;
+  stroke-opacity: 0.22;
+  stroke-width: 1;
+  stroke-dasharray: 1 5;
+  stroke-linecap: round;
+  transition: d 260ms ease;
+}
+
 /* what the soil holds */
 .plot-reserve {
   fill: currentColor;
@@ -641,9 +652,9 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
    click on a labelled tick — pH 7, say, dead centre of the arc — lands on the
    tick and does nothing at all. Only the hit arc and the marker take input. */
 .dial-track, .dial-sweet, .dial-ticks, .dial-tick, .dial-tick-label,
-.dial-reading, .dial-value, .dial-zone,
+.dial-reading, .dial-value, .dial-zone, .day-count, .clock-art,
 .web, .spoke, .web-bezel, .axis-label,
-.plot-reserve, .plot-available, [data-dots] {
+.plot-was, .plot-reserve, .plot-available, [data-dots] {
   pointer-events: none;
 }
 
@@ -726,6 +737,25 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   filter: drop-shadow(0 0 6px currentColor);
 }
 
+/* --- the season track ----------------------------------------------------- */
+/* A path for the sun rather than a scale to compare against the others: thin,
+   quiet, and no reading of its own — the day count sits in the middle of the
+   chart instead. */
+.dial--season .dial-track      { stroke-width: 2.5; opacity: 0.55; }
+.dial--season .dial-tick       { opacity: 0.22; }
+.dial--season .dial-tick-label { font-size: 11px; opacity: 0.34; }
+.dial--season .dial-hit        { stroke-width: 40; }
+.clock-fallback                { fill: var(--plot, #E4B363); opacity: 0.85; }
+.clock-art                     { overflow: visible; }
+
+.day-count {
+  fill: currentColor;
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* --- the same numbers, read rather than seen ------------------------------ */
 /* Two label+bar pairs per row. `display: contents` on .level flattens each
    pair into the grid, so the columns go label, bar, label, bar. */
@@ -738,7 +768,10 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   align-items: center;
   gap: 0.45rem 1.4rem;
 }
-@media (max-width: 560px) { .levels { grid-template-columns: auto 1fr; } }
+@media (max-width: 560px) {
+  .levels { grid-template-columns: auto 1fr; }
+  .footnote { display: none; }
+}
 
 .level { display: contents; }
 .level dt {
@@ -770,6 +803,13 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 }
 .level-reserve   { background: currentColor; opacity: 0.18; }
 .level-available { background: var(--plot, #E4B363); }
+/* Where this nutrient stood on day zero. Only the far edge is drawn, so it
+   reads as a high-water mark rather than another bar. */
+.level-was {
+  border-right: 1px dashed currentColor;
+  opacity: 0.45;
+  background: none;
+}
 .level-figure {
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
@@ -796,6 +836,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   gap: 0.35rem;
 }
 .verdict strong { font-weight: 600; }
+.verdict em { font-style: normal; font-weight: 600; opacity: 0.95; }
 .verdict-line.is-sizer { visibility: hidden; }
 
 /* Held in place by the stack; only one is ever visible. */
@@ -826,10 +867,10 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
      height the dials need to stay readable on a laptop. */
   .footnote { display: none; }
   .levels { gap: 0.3rem 1.2rem; }
-  .scope-svg { height: min(clamp(190px, 58vh, 560px), 46vw, 100vh - 372px); }
+  .scope-svg { height: min(clamp(190px, 58vh, 560px), 46vw, 100vh - 384px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .plot-reserve, .plot-available, [data-dots] circle,
+  .plot-was, .plot-reserve, .plot-available, [data-dots] circle,
   .level-reserve, .level-available { transition: none; }
 }
