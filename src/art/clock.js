@@ -24,29 +24,77 @@ const SCOPE = 'clock-art';
 
 let pending = null;   // one fetch, however many callers
 
+/** Index of the `}` closing the block that opens at `from`. */
+function closeOf(text, from) {
+  let depth = 0;
+  for (let i = from; i < text.length; i++) {
+    if (text[i] === '{') depth++;
+    else if (text[i] === '}' && --depth === 0) return i;
+  }
+  return text.length;
+}
+
+/**
+ * Walk a stylesheet block by block, prefixing every ordinary selector.
+ *
+ * This began as one regex and it was wrong in a way worth recording. The
+ * pattern excluded `@` from a selector's first character to skip at-rules —
+ * but the `\s*` before it could give a space back under backtracking, the
+ * space then satisfied "not an @", and the whole `@keyframes` line was
+ * swallowed as if it were a selector. Prefixed, it stopped being a valid
+ * at-rule, the parser dropped every keyframe in the file, and the animations
+ * had nothing left to animate: the sun sat at frame one for all ninety days.
+ *
+ * Counting braces is duller and it cannot do that.
+ */
+function scopeBlock(text) {
+  let out = '', i = 0;
+
+  while (i < text.length) {
+    const open = text.indexOf('{', i);
+    if (open < 0) { out += text.slice(i); break; }
+
+    const prelude = text.slice(i, open);
+    const head    = prelude.trim();
+    const close   = closeOf(text, open);
+    const body    = text.slice(open + 1, close);
+
+    if (head.startsWith('@keyframes')) {
+      // Percentages inside are stops, not selectors. Hands off.
+      out += `${prelude}{${body}}`;
+    } else if (head.startsWith('@')) {
+      // @media and friends: the rules INSIDE still need scoping.
+      out += `${prelude}{${scopeBlock(body)}}`;
+    } else {
+      const scoped = head.split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(s => (s === 'svg' ? `.${SCOPE}` : `.${SCOPE} ${s}`))
+        .join(', ');
+      out += `${prelude.replace(head, scoped)}{${body}}`;
+    }
+    i = close + 1;
+  }
+  return out;
+}
+
 /**
  * Rewrite a stylesheet so it can only reach inside `.clock-art`.
  * Keyframe names are prefixed too — those are global no matter where the
  * rule sits, and `rays` is a plausible enough name to collide one day.
  */
 function scopeCSS(css) {
+  // Comments first. The walker reads everything before a `{` as a prelude,
+  // and a comment sitting in front of an at-rule would ride along inside it.
+  css = css.replace(/\/\*[\s\S]*?\*\//g, '');
+
   for (const name of [...css.matchAll(/@keyframes\s+([\w-]+)/g)].map(m => m[1])) {
     css = css.replace(new RegExp(`@keyframes\\s+${name}\\b`, 'g'), `@keyframes sm-${name}`);
     css = css.replace(
       new RegExp(`(animation(?:-name)?\\s*:[^;}]*?)\\b${name}\\b`, 'g'), `$1sm-${name}`);
   }
 
-  // Prefix ordinary selectors. At-rule preludes start with @ and are excluded
-  // by the character class; keyframe stops (`0%`, `from`) are skipped by hand.
-  return css.replace(/(^|[}{;])\s*([^{}@][^{}]*?)\{/g, (whole, before, selector) => {
-    if (/^\s*(\d|from\b|to\b)/.test(selector)) return whole;
-    const scoped = selector.split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(s => (s === 'svg' ? `.${SCOPE}` : `.${SCOPE} ${s}`))
-      .join(', ');
-    return `${before} ${scoped} {`;
-  });
+  return scopeBlock(css);
 }
 
 // Parked, so the only thing that moves the artwork is the season track.
@@ -91,10 +139,22 @@ export function clockSVG(size = 38) {
 }
 
 /**
- * Park the artwork on a given day. `dayLength` is the artwork's own `--dur`,
- * two seconds, so ninety days is a hundred and eighty seconds in — about three
- * lunations, which is roughly what a season is.
+ * Park the artwork on a given day.
+ *
+ * `dayLength` is the artwork's own `--dur` — two seconds, one full sun-to-night
+ * -to-sun turn. Which is the trap: seeking a whole number of days is seeking a
+ * whole number of TURNS, so every day lands on frame zero and you get broad
+ * daylight for all ninety of them. The moon was stepping through its phases
+ * correctly the entire time and never once being on screen for it.
+ *
+ * So odd days are nudged 45% into the cycle, which is the middle of that day's
+ * night. Even days keep the sun. Dragging the track then alternates day, night,
+ * day, night — one per day, which is what "days are passing" looks like — and
+ * because the slow clock still lands inside the right step, every moon shown is
+ * that day's true phase. Across ninety days you get about three lunations.
  */
 export function seekClock(el, day, dayLength = 2) {
-  el.style.setProperty('--seek', `${(-day * dayLength).toFixed(2)}s`);
+  const NIGHT = 0.45;                       // safely inside the 19–71% night
+  const at = day + (Math.round(day) % 2 ? NIGHT : 0);
+  el.style.setProperty('--seek', `${(-at * dayLength).toFixed(3)}s`);
 }
