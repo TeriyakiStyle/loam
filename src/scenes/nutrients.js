@@ -16,19 +16,33 @@
 // ---------------------------------------------------------------------------
 
 import { NUTRIENTS, RINGS, SAMPLE_BED, COUPLINGS, SEASON,
-         evaluate, project, limiting, culprit, lockedFraction,
+         evaluate, project, limiting, culprit, lockedFraction, ledger,
          noteIndex, allInBand }
   from '../soil/nutrients.js';
-import { FIELDS, entry, hasEntry } from '../soil/glossary.js';
+import { FIELDS, entry }        from '../soil/glossary.js';
 import { radarHTML, radarOps }  from '../ui/radar.js';
 import { dialHTML, dialOps }    from '../ui/dial.js';
 import { cardOps }              from '../ui/card.js';
 import { clockSVG, seekClock }  from '../art/clock.js';
 
 // The face, from the middle out.
+//
+// The letters and their figures share the ring between the hexagon and the
+// bezel: letter inside, number just outside it, both on the same spoke. That
+// ring used to hold only the letters, with the numbers listed as bars beneath
+// the drawing — which meant reading a shape, then reading a list, then
+// matching one to the other. The chart was always saying it already.
 const R_CHART = 92;    // hexagon at full value
-const R_LABEL = 130;   // where the letters sit
-const R_BEZEL = 164;   // the circle around them
+const R_LABEL = 120;   // where the letters sit
+const R_VALUE = 145;   // and the reading, one step further out
+const R_BEZEL = 164;   // the circle around them both
+
+// How much headroom past the target the chart shows. A soil can hold more
+// than a crop needs — that is an ordinary state, not an error — so the ring
+// cannot be the edge of the world. At 1.5 the target sits two-thirds out,
+// which leaves a visible band of "more than enough" without shrinking the
+// part of the scale where the answers actually live.
+const FULL = 1.5;
 const R_DIAL  = 198;   // every dial rides this one ring
 const R_SEASON = 308;  // and the sun crosses outside all of it
 
@@ -96,8 +110,10 @@ export function render(el, _store) {
     cx, cy,
     r: R_CHART,
     labelGap: R_LABEL - R_CHART,
+    valueGap: R_VALUE - R_CHART,
     bezel: R_BEZEL,
     webs: 3,
+    targetAt: 1 / FULL,
     // The six letters are the way into the glossary — see the card below.
     pick: true,
   };
@@ -129,43 +145,25 @@ export function render(el, _store) {
               text-anchor="middle" dominant-baseline="middle"></text>
       </svg>
 
-      <!-- One column, not two. Six bars stacked share a left edge, so their
-           lengths can be compared by eye in a single pass down the list;
-           split across two columns they could only be compared three at a
-           time, and the shortest bar — the whole point of the readout — no
-           longer stands out. -->
-      <dl class="levels" data-levels>
-        ${NUTRIENTS.map(n => `
-        <div class="level" data-level="${n.key}">
-          <dt>${hasEntry(n.key)
-            ? `<button type="button" class="level-name" data-pick="${n.key}"
-                       aria-expanded="false" aria-label="${n.name}">${n.symbol}</button>`
-            : `<abbr title="${n.name}">${n.symbol}</abbr>`}</dt>
-          <dd>
-            <span class="level-track">
-              <span class="level-reserve"   data-level-reserve></span>
-              <span class="level-available" data-level-available></span>
-              <span class="level-was"       data-level-was></span>
-            </span>
-            <span class="level-figure" data-level-figure></span>
-          </dd>
-        </div>`).join('')}
-      </dl>
-
       <!-- Every line the verdict can ever show is laid out here at once, in a
            single grid cell, with the inactive ones merely invisible. The block
            is therefore always as tall as its tallest possible contents, so
            dragging a dial cannot change the height of the document — which is
-           what made the page twitch as the text got longer or shorter. -->
+           what made the page twitch as the text got longer or shorter.
+
+           That reservation is only free if the lines are of a SIZE. When the
+           verdict could run to five clauses and usually ran to two, the block
+           held a hole where the other three would have been, and the hole
+           read as a mistake. The sentences below are short and roughly equal;
+           the sizer is what the longest of them actually costs. -->
       <div class="verdict">
         <div class="stack">
           <p class="verdict-line" data-verdict></p>
           <p class="verdict-line is-sizer" aria-hidden="true">
-            <strong>Phosphorus</strong> is the limit here, at 100% — and
-            100% of everything in this soil is out of reach. The temperature
-            is what's holding it. Held here for 90 days, this soil loses 100%
-            of what it started with — <em>almost none of it into a crop</em>: it is
-            leaching away and gassing off.</p>
+            <strong>Phosphorus</strong> is the limit — 1000 of 1000 ppm, and the
+            temperature is what's holding it back, along with 100% of everything
+            else here. After 90 days, 100% of the bed is gone —
+            <em>almost none into a crop</em>.</p>
         </div>
         <div class="stack">
           ${MESSAGES.map(m => `
@@ -175,10 +173,11 @@ export function render(el, _store) {
       </div>
 
       <p class="footnote">
-        Solid: what the roots can reach. Dashed: what the soil holds. Dotted,
-        once the sun has moved: where it stood on day one. Availability follows
-        the standard bands; the depletion rates are round numbers chosen to
-        behave right, not measurements.
+        Figures are ppm. Rings are half, one and one-and-a-half times target;
+        the bold one is target, where a soil test stops asking for more.
+        Filled: what roots reach. Dashed: what the soil holds. Dotted: day one.
+        Targets are Bray-1 / Mehlich-3 — Olsen phosphorus reads about half.
+        Depletion rates are chosen to behave right, not measured.
       </p>
     </section>
   `;
@@ -188,19 +187,18 @@ export function render(el, _store) {
   const verdict = el.querySelector('[data-verdict]');
   const notes   = new Map([...el.querySelectorAll('[data-note]')]
     .map(node => [node.dataset.note, node]));
-  const levels  = Object.fromEntries([...el.querySelectorAll('[data-level]')]
-    .map(node => [node.dataset.level, {
-      node,
-      reserve:   node.querySelector('[data-level-reserve]'),
-      available: node.querySelector('[data-level-available]'),
-      was:       node.querySelector('[data-level-was]'),
-      figure:    node.querySelector('[data-level-figure]'),
-    }]));
 
   const values = Object.fromEntries(RINGS.map(r => [r.key, r.start]));
   let days = SEASON.start;
 
   const dayText = el.querySelector('[data-days]');
+
+  // Everything the chart plots is a share of that nutrient's target, scaled
+  // into the radius. The figures beside the axes stay in ppm — the shape is
+  // what makes six different nutrients comparable, and the number is what
+  // makes any one of them checkable.
+  const plot = ppm => Math.max(0, Math.min(1, ppm / FULL));
+  const ppm  = v => (v >= 100 ? Math.round(v) : v >= 10 ? v.toFixed(0) : v.toFixed(1));
 
   function update() {
     // Time first: run the reserves forward, then read availability off what
@@ -208,61 +206,62 @@ export function render(el, _store) {
     // is what the season has done to the soil.
     const ahead = project(SAMPLE_BED, values, days);
     const { rows, fired } = evaluate(ahead.reserves, values);
-    // Where each reserve stood before the season ran, so the chart can show
-    // what has been taken out as well as what is locked away.
-    radar.set(days ? rows.map(r => ({ ...r, was: SAMPLE_BED[r.key] })) : rows);
+
+    radar.set(rows.map(row => ({
+      key:       row.key,
+      reserve:   plot(row.reserve / row.target),
+      available: plot(row.share),
+      // Where this nutrient stood before the season ran, so the chart shows
+      // what has been taken OUT as well as what is locked away.
+      ...(days ? { was: plot(SAMPLE_BED[row.key] / row.target) } : {}),
+      figure:    ppm(row.available),
+      // Short enough that a lab would tell you to add some.
+      //
+      // Not `share < 1`. Optimum is a BAND, not a cliff — every one of the
+      // targets above is the middle or top of a published range, so a soil at
+      // 149 of 150 is not deficient in potassium, it is at target with a
+      // rounding error. Colouring five of six figures red on a healthy bed
+      // teaches the reader to ignore the colour, which costs it the one job
+      // it has: to shout when something is actually wrong.
+      short:     row.share < 0.75,
+      label:     `${row.name}, ${ppm(row.available)} of ${row.target} ppm available`,
+    })));
 
     dayText.textContent = days > 0 ? `DAY ${Math.round(days)}` : '';
 
-    for (const row of rows) {
-      const level = levels[row.key];
-      const was   = SAMPLE_BED[row.key];
-      level.reserve.style.width   = `${(row.reserve   * 100).toFixed(1)}%`;
-      level.available.style.width = `${(row.available * 100).toFixed(1)}%`;
-      // A ghost of where this nutrient started, so the retreat is visible.
-      level.was.style.width       = `${(was * 100).toFixed(1)}%`;
-      level.was.hidden            = !days;
-      level.figure.textContent    = `${Math.round(row.available * 100)}%`;
-      // Under half of its own reserve means held back, not absent — which is
-      // the distinction the whole page exists to make.
-      level.node.classList.toggle('is-locked', row.factor < 0.5);
-    }
-
     const worst  = limiting(rows);
     const locked = lockedFraction(rows);
-    const taken  = NUTRIENTS.reduce((s, n) => s + ahead.uptake[n.key], 0);
-    const wasted = NUTRIENTS.reduce((s, n) => s + ahead.waste[n.key], 0);
     // With one dial you always knew what changed. With three you don't, so
     // the verdict has to name the ring, not just the nutrient.
     const blame  = culprit(worst);
-    // Opening on a healthy bed and saying "X is the LIMIT" reads like an
-    // alarm. When all three dials are in their bands there is nothing wrong —
-    // there is just a ceiling, which is a different sentence.
-    const today = allInBand(values)
-      ? `All three dials are in their working range. <strong>${worst.name}</strong>
-         is still the ceiling at ${Math.round(worst.available * 100)}%, and
-         ${Math.round(locked * 100)}% of this soil stays out of reach even here.`
-      : `<strong>${worst.name}</strong> is the limit here, at
-         ${Math.round(worst.available * 100)}% — and
-         ${Math.round(locked * 100)}% of everything in this soil is out of reach.
-         The ${blame.noun} is what's holding it.`;
+
+    // Now that the scale has a denominator, the sentence can say what the
+    // shortfall IS: not "58%" of nothing in particular, but this much of the
+    // level a lab would ask for. And a soil that clears every target is a
+    // different sentence again — no ceiling, no alarm.
+    const short = `${ppm(worst.available)} of ${worst.target} ppm`;
+    const today = worst.share >= 1
+      ? `Every nutrient is at or above target. <strong>${worst.name}</strong> is
+         the closest to the line, at ${short}.`
+      : allInBand(values)
+      ? `<strong>${worst.name}</strong> is the limit — ${short}, with all three
+         dials in range. This bed is short of it, not locked out of it.`
+      : `<strong>${worst.name}</strong> is the limit — ${short}, and the
+         ${blame.noun} is what's holding it back${
+           locked > 0.15 ? `, along with ${Math.round(locked * 100)}% of
+           everything else here` : ''}.`;
 
     // The two doors. Same falling number, opposite meaning: one of these is a
     // harvest and the other is a leak, and saying which is the whole reason
     // the projection is worth having.
-    const gone  = taken + wasted;
-    const start = NUTRIENTS.reduce((s, n) => s + SAMPLE_BED[n.key], 0);
-    const kept  = gone > 0 ? taken / gone : 0;
-    const ledger = !days ? ''
-      : ` Held here for ${Math.round(days)} days, this soil loses
-          ${Math.round(gone / start * 100)}% of what it started with —
-          ${kept >= 0.6 ? `<em>most of it into the crop</em>, which is what a
-             harvest is`
-           : kept <= 0.25 ? `<em>almost none of it into a crop</em>: it is
-             leaching away and gassing off`
-           : `<em>about half into the crop</em>, the rest leaching away`}.`;
+    const season = days ? ledger(SAMPLE_BED, ahead) : null;
+    const past = !season ? ''
+      : ` After ${Math.round(days)} days, ${Math.round(season.gone * 100)}% of
+          the bed is gone — ${season.kept >= 0.6 ? `<em>most of it into the crop</em>`
+           : season.kept <= 0.25 ? `<em>almost none into a crop</em>`
+           : `<em>about half into the crop</em>`}.`;
 
-    verdict.innerHTML = today + ledger;
+    verdict.innerHTML = today + past;
 
     // A coupling that has fired outranks any single ring's note: it is the
     // surprising thing on screen, so it is the thing worth explaining.
@@ -287,9 +286,9 @@ export function render(el, _store) {
   }));
 
   // --- the glossary, on demand -------------------------------------------
-  // Two ways in to the same card: the letter on the chart and the label on
-  // the bar beneath it. They are the same term in two places, so they open
-  // the same thing, and either one closes it again.
+  // The six letters on the face are the way in. They already carry the
+  // reading, so they are the one place on the page that is unambiguously
+  // ABOUT a nutrient — which makes them the right thing to click.
   const section = el.querySelector('.instrument');
   const card    = cardOps(section, FIELDS);
   const picks   = [...section.querySelectorAll('[data-pick]')];
@@ -305,7 +304,14 @@ export function render(el, _store) {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
     }
-    card.toggle(trigger, { name: NUTRIENTS.find(n => n.key === found.key).name, ...found });
+    const nutrient = NUTRIENTS.find(n => n.key === found.key);
+    card.toggle(trigger, {
+      ...found,
+      name: nutrient.name,
+      // The target belongs at the top, not buried at the bottom: it is the
+      // denominator of the figure the reader just clicked on.
+      meta: found.target ? `Target · ${found.target}` : '',
+    });
   }
 
   picks.forEach(p => {

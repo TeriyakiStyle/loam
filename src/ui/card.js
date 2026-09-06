@@ -45,11 +45,13 @@ export function cardOps(host, fields) {
     </button>
     <h2 class="card-title" id="${id}-title" data-title></h2>
     <p class="card-tagline" data-tagline></p>
+    <p class="card-meta" data-meta></p>
     <dl class="card-body" data-body></dl>`;
   host.append(node);
 
   const titleEl   = node.querySelector('[data-title]');
   const taglineEl = node.querySelector('[data-tagline]');
+  const metaEl    = node.querySelector('[data-meta]');
   const bodyEl    = node.querySelector('[data-body]');
 
   let current = null;   // the trigger the open card belongs to
@@ -107,6 +109,8 @@ export function cardOps(host, fields) {
     titleEl.textContent   = entry.name || entry.title || '';
     taglineEl.textContent = entry.tagline || '';
     taglineEl.hidden      = !entry.tagline;
+    metaEl.textContent    = entry.meta || '';
+    metaEl.hidden         = !entry.meta;
 
     bodyEl.innerHTML = fields
       .filter(f => entry[f.key])

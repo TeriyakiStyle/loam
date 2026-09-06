@@ -585,7 +585,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   /* The canvas is wider than it is tall (the zone names need room at the ends
      of the arc), so height alone would leave the dial looking small. Take the
      lesser of the two budgets and let whichever is scarcer decide. */
-  height: min(clamp(190px, 50vh, 560px), 46vw, 100vh - 508px);
+  height: min(clamp(190px, 62vh, 620px), 50vw, 100vh - 392px);
   width: auto;
   max-width: 100%;
   overflow: visible;
@@ -605,8 +605,22 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 .web, .spoke {
   fill: none;
   stroke: currentColor;
-  opacity: 0.16;
+  /* Faint on purpose. These are graph paper; the target ring below is the one
+     hexagon on the face that a reader is meant to notice, and it can only be
+     the loudest line here if the others agree to be quiet. */
+  opacity: 0.11;
   stroke-width: 1;
+}
+/* The target — and deliberately NOT dashed. Dashed already means "what the
+   soil holds" on the polygon and dotted means "day one", so a third broken
+   line would be a third thing to decode. It lands exactly on the middle web,
+   because the webs are drawn at half, one and one-and-a-half times target:
+   this is the same graph paper, turned up. */
+.web-target {
+  fill: none;
+  stroke: currentColor;
+  opacity: 0.75;
+  stroke-width: 2;
 }
 .axis-label {
   fill: currentColor;
@@ -624,9 +638,25 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   pointer-events: all;
   cursor: pointer;
 }
+/* The reading, on its own axis. Set back from the letter — the letter names
+   the thing, the figure measures it, and they should not compete. */
+.axis-value {
+  fill: var(--plot, #E4B363);
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+  transition: fill 200ms ease;
+}
+/* Below the target ring — short of what the crop is asking for. */
+.axis-value.is-short  { fill: #E4746B; opacity: 1; }
+
 .axis-pick:hover .axis-label,
 .axis-pick:focus-visible .axis-label,
 .axis-pick[aria-expanded="true"] .axis-label { opacity: 1; }
+.axis-pick:hover .axis-value,
+.axis-pick:focus-visible .axis-value,
+.axis-pick[aria-expanded="true"] .axis-value { opacity: 1; }
 .axis-pick:focus-visible { outline: none; }
 .axis-pick:focus-visible .axis-hit,
 .axis-pick[aria-expanded="true"] .axis-hit {
@@ -676,7 +706,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
    tick and does nothing at all. Only the hit arc and the marker take input. */
 .dial-track, .dial-sweet, .dial-ticks, .dial-tick, .dial-tick-label,
 .dial-reading, .dial-value, .dial-zone, .day-count, .clock-art,
-.web, .spoke, .web-bezel, .axis-label,
+.web, .web-target, .spoke, .web-bezel, .axis-label, .axis-value,
 .plot-was, .plot-reserve, .plot-available, [data-dots] {
   pointer-events: none;
 }
@@ -777,92 +807,15 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   letter-spacing: 0.2em;
   opacity: 0.5;
   pointer-events: none;
+  /* A nutrient at zero plots its dot at the origin, which is exactly where
+     this sits. Painting the stroke first gives the text a halo in the ground
+     colour, so it stays readable over the dot, over the fill, over anything
+     that ends up underneath it. */
+  paint-order: stroke fill;
+  stroke: var(--ground);
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }
-
-/* --- the same numbers, read rather than seen ------------------------------ */
-/* One column, centred. `display: contents` on .level flattens each row into
-   the grid, so the columns go label, bar — and every bar starts at the same
-   x. Six lengths sharing a left edge can be read against each other in a
-   single downward glance; that is the entire reason this block exists, and
-   two columns took it away. */
-.levels {
-  margin: 0 auto;
-  width: 100%;
-  max-width: 26rem;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 0.45rem 1.1rem;
-}
-@media (max-width: 560px) {
-  .footnote { display: none; }
-}
-
-.level { display: contents; }
-.level dt {
-  font-size: 0.85rem;
-  opacity: 0.75;
-  text-align: right;
-  align-self: center;
-  min-width: 1.6rem;
-}
-.level dt abbr { text-decoration: none; border: 0; }
-/* The same term as the letter on the chart, and the same card behind it. */
-.level-name {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  border-bottom: 1px dotted currentColor;
-  line-height: 1.2;
-}
-.level-name:hover,
-.level-name[aria-expanded="true"] { border-bottom-style: solid; opacity: 1; }
-.level-name:focus-visible {
-  outline: 1px solid currentColor;
-  outline-offset: 3px;
-}
-.level dd {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.level-track {
-  position: relative;
-  flex: 1;
-  height: 7px;
-  border-radius: 4px;
-  background: var(--hover);
-  overflow: hidden;
-}
-.level-reserve, .level-available {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 4px;
-  transition: width 260ms ease;
-}
-.level-reserve   { background: currentColor; opacity: 0.18; }
-.level-available { background: var(--plot, #E4B363); }
-/* Where this nutrient stood on day zero. Only the far edge is drawn, so it
-   reads as a high-water mark rather than another bar. */
-.level-was {
-  border-right: 1px dashed currentColor;
-  opacity: 0.45;
-  background: none;
-}
-.level-figure {
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-  opacity: 0.65;
-  min-width: 2.6rem;
-  text-align: right;
-}
-/* held back rather than absent — the distinction the page is about */
-.level.is-locked dt,
-.level.is-locked .level-figure { opacity: 1; color: #E4746B; }
 
 /* --- the info card -------------------------------------------------------- */
 /* Absolutely positioned against .instrument, so it floats over the face and
@@ -924,9 +877,23 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   letter-spacing: 0.01em;
 }
 .card-tagline {
-  margin: 0.1rem 0 0.55rem;
+  margin: 0.1rem 0 0.5rem;
   font-size: 0.78rem;
   opacity: 0.7;
+}
+/* The denominator of the figure on the chart. It gets to look like a reading
+   rather than a sentence, because that is what it is. */
+.card-meta {
+  display: inline-block;
+  margin: 0 0 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--plot, currentColor);
+  opacity: 0.9;
 }
 .card-body { margin: 0; }
 /* Labels are signposts, not headings — small, quiet, and the same every time
@@ -971,9 +938,9 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 
 .footnote {
   margin: 0;
-  max-width: 36rem;
+  max-width: 50rem;
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   opacity: 0.45;
 }
@@ -986,11 +953,10 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   /* The caveat can go; the instrument cannot. Dropping it buys back the
      height the dials need to stay readable on a laptop. */
   .footnote { display: none; }
-  .levels { gap: 0.3rem 1.2rem; }
-  .scope-svg { height: min(clamp(190px, 58vh, 560px), 46vw, 100vh - 384px); }
+  .scope-svg { height: min(clamp(190px, 70vh, 620px), 50vw, 100vh - 300px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .plot-was, .plot-reserve, .plot-available, [data-dots] circle,
-  .level-reserve, .level-available { transition: none; }
+  .axis-value { transition: none; }
 }

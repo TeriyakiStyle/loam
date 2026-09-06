@@ -27,14 +27,50 @@
 // ---------------------------------------------------------------------------
 
 // The six macronutrients, clockwise from the top of the chart.
+//
+// `target` is the level, in ppm, at which a soil test stops recommending more.
+// It is the reason every number on this page means something: the chart's
+// full ring is not "a full hexagon", it is THIS MUCH OF THIS NUTRIENT, and a
+// spoke is short of a figure a lab would actually print.
+//
+// These come from extension soil-test interpretation, and they are consensus
+// middles rather than any one lab's calibration:
+//
+//   N   30   nitrate-N. Above this, more nitrogen does not raise yield and
+//            can lower it (UMass pre-sidedress nitrate test).
+//   S   15   sulfate-S. Iowa State treats under 15 as low; Oregon State's
+//            medium band is 5–20.
+//   K  150   Oregon State's low/medium boundary; Iowa State calls above 125
+//            sufficient. Penn State's vegetable optimum is lower, 70–140.
+//   Ca 1000  Wisconsin's ideal for loams is 600–1000; below 300–400 is low.
+//   P   50   Penn State's optimum for mixed vegetables is 35–70.
+//   Mg 100   Penn State's optimum; Wisconsin's range for loams is 100–500.
+//
+// THE CAVEAT THAT HAS TO TRAVEL WITH THEM: a soil test number is meaningless
+// without its extraction method. Bray-1, Olsen and Mehlich-3 pull different
+// amounts out of the same soil — Olsen phosphorus runs roughly half of
+// Bray-1 — so these belong to the Bray-1 / Mehlich-3 family that most US labs
+// report, and the page says so.
+//
+// And one more, because it is the join between this file's two halves. An
+// extraction is already a proxy for "what a root could get at" — so is it
+// double-counting to multiply it by a pH factor as well? No, and the
+// distinction is worth being precise about: the test measures the POOL, the
+// size of the reservoir. The rings govern what share of that reservoir a root
+// actually realises over a season. This is why a lab recommends lime rather
+// than phosphate for a soil that tests adequate in phosphorus and reads acid:
+// the pool is there, the access is not.
 export const NUTRIENTS = [
-  { key: 'N',  symbol: 'N',  name: 'Nitrogen'   },
-  { key: 'S',  symbol: 'S',  name: 'Sulfur'     },
-  { key: 'K',  symbol: 'K',  name: 'Potassium'  },
-  { key: 'Ca', symbol: 'Ca', name: 'Calcium'    },
-  { key: 'P',  symbol: 'P',  name: 'Phosphorus' },
-  { key: 'Mg', symbol: 'Mg', name: 'Magnesium'  },
+  { key: 'N',  symbol: 'N',  name: 'Nitrogen',   target: 30,   test: 'nitrate-N'  },
+  { key: 'S',  symbol: 'S',  name: 'Sulfur',     target: 15,   test: 'sulfate-S'  },
+  { key: 'K',  symbol: 'K',  name: 'Potassium',  target: 150,  test: 'exchangeable' },
+  { key: 'Ca', symbol: 'Ca', name: 'Calcium',    target: 1000, test: 'exchangeable' },
+  { key: 'P',  symbol: 'P',  name: 'Phosphorus', target: 50,   test: 'Bray-1'     },
+  { key: 'Mg', symbol: 'Mg', name: 'Magnesium',  target: 100,  test: 'exchangeable' },
 ];
+
+/** Target level for a nutrient, in ppm. */
+export const target = key => NUTRIENTS.find(n => n.key === key)?.target ?? 1;
 
 // Straight-line interpolation between control points, flat outside them.
 function curve(points, x) {
@@ -405,14 +441,27 @@ export const COUPLINGS = [
 ];
 
 // ---------------------------------------------------------------------------
-// What is actually down there.
+// What is actually down there — in ppm, as a lab would report it.
 //
-// Fixed for now — a decent, unremarkable garden bed. This is the hook for the
-// rest of the game: when the Physical and Biological chapters produce a real
-// soil, they hand their result in here and the chart reads it.
+// A decent, unremarkable garden bed. These are pool figures — what a lab
+// would extract — so they sit ABOVE the targets by roughly what the rings
+// take back out at a good pH, and the bed opens with everything about at
+// target and nitrogen a little short. Which is what most beds look like:
+// nitrogen is the one you are always chasing, because it is the one that
+// leaves by three doors at once.
+//
+// Calcium at 1500 and sulfur at 17 are not the same kind of number and are
+// not meant to be. That is exactly what the targets are for.
+//
+// Real soil-test figures, not a scale from nought to one, and that is the
+// point: the chart can now be wrong in a way somebody could check.
+//
+// Fixed for now. This is the hook for the rest of the game — when the Physical
+// and Biological chapters produce a real soil, they hand their result in here
+// and the chart reads it.
 // ---------------------------------------------------------------------------
 export const SAMPLE_BED = {
-  N: 0.72, S: 0.80, K: 0.86, Ca: 0.90, P: 0.78, Mg: 0.82,
+  N: 28, S: 17, K: 165, Ca: 1500, P: 50, Mg: 140,
 };
 
 // ---------------------------------------------------------------------------
@@ -495,9 +544,11 @@ export function project(reserves, values, days, rings = RINGS, couplings = COUPL
   }
 
   // Liebig again: the crop grows at the rate of its scarcest input, so a bed
-  // held back by nitrogen removes little of anything else.
+  // held back by nitrogen removes little of anything else. Measured as a
+  // share of target — and capped at one, because a soil holding twice the
+  // calcium it needs does not grow a crop twice as fast.
   const today = evaluate(reserves, values, rings, couplings).rows;
-  const growth = today.reduce((lo, r) => Math.min(lo, r.available), 1);
+  const growth = today.reduce((lo, r) => Math.min(lo, clamp01(r.share)), 1);
 
   for (const n of NUTRIENTS) {
     const held = reserves[n.key] ?? 0;
@@ -568,12 +619,18 @@ export function zoneLabel(ring, value) {
 /**
  * Run the reserves through every ring, then through whichever couplings fire.
  *
- * @param reserves  { N, P, K, Ca, Mg, S } each 0–1
+ * @param reserves  { N, P, K, Ca, Mg, S } in ppm
  * @param values    { ph, temp, moisture } current dial positions
  * @returns { rows, fired }
- *          rows  — { key, symbol, name, reserve, available, factor, factors }
- *                  where `factors` is the per-ring breakdown, which is what
- *                  lets the page say WHICH dial is doing the damage.
+ *          rows  — { key, symbol, name, target, reserve, available, share,
+ *                    factor, factors }
+ *                  `reserve` and `available` are ppm; `share` is available
+ *                  over target, which is the only one of the three that can
+ *                  be compared between nutrients — 1200 ppm of calcium and
+ *                  12 ppm of nitrogen are not on the same scale, and the
+ *                  whole reason the target exists is to put them on one.
+ *                  `factors` is the per-ring breakdown, which is what lets
+ *                  the page say WHICH dial is doing the damage.
  *          fired — the couplings currently in effect.
  */
 export function evaluate(reserves, values, rings = RINGS, couplings = COUPLINGS) {
@@ -594,8 +651,9 @@ export function evaluate(reserves, values, rings = RINGS, couplings = COUPLINGS)
     const reserve = reserves[n.key] ?? 0;
     // Clamped: a coupling can free what a ring was holding, but nothing can
     // conjure more than the soil has.
-    return { ...n, reserve, factors, factor,
-             available: Math.min(reserve, reserve * factor) };
+    const available = Math.min(reserve, reserve * factor);
+    return { ...n, reserve, factors, factor, available,
+             share: available / n.target };
   });
 
   return { rows, fired };
@@ -609,9 +667,41 @@ export function allInBand(values, rings = RINGS) {
   });
 }
 
-/** The scarcest one — what the bed is actually limited by. */
+/**
+ * The scarcest one — what the bed is actually limited by.
+ *
+ * Compared as a SHARE OF TARGET, never as ppm. In ppm, calcium is a thousand
+ * and nitrogen is twenty, so raw amounts would say nitrogen is always the
+ * problem and calcium never is, which is not a finding — it is a unit.
+ */
 export function limiting(rows) {
-  return rows.reduce((worst, r) => (r.available < worst.available ? r : worst));
+  return rows.reduce((worst, r) => (r.share < worst.share ? r : worst));
+}
+
+/**
+ * What the season took, as two unit-free fractions.
+ *
+ * Same reasoning as the tax above: adding ppm of calcium to ppm of nitrogen
+ * is adding apples to a thousand oranges. Each nutrient's loss is measured
+ * against its own starting level and the six are averaged, so this says "the
+ * bed lost about a fifth of itself" rather than "the bed lost 240 of
+ * something".
+ *
+ * @returns { gone, kept } — the share of the bed that left, and how much of
+ *          THAT went into the crop rather than into the water table.
+ */
+export function ledger(start, ahead, nutrients = NUTRIENTS) {
+  let gone = 0, taken = 0;
+  for (const n of nutrients) {
+    const had = start[n.key] ?? 0;
+    if (!had) continue;
+    gone  += (ahead.uptake[n.key] + ahead.waste[n.key]) / had;
+    taken += ahead.uptake[n.key] / had;
+  }
+  return {
+    gone: gone / nutrients.length,
+    kept: gone > 0 ? taken / gone : 0,
+  };
 }
 
 /** Which ring is doing the most damage to this nutrient. */
@@ -620,9 +710,17 @@ export function culprit(row, rings = RINGS) {
     (row.factors[ring.key] ?? 1) < (row.factors[worst.key] ?? 1) ? ring : worst);
 }
 
-/** How much of the reserve the plant is losing, 0–1. The tax. */
+/**
+ * How much of what is down there the plant cannot reach, 0–1. The tax.
+ *
+ * The mean of six per-nutrient fractions, not a ratio of two sums. Summing
+ * ppm across nutrients would make this a statement about calcium with five
+ * rounding errors attached, since calcium outweighs the other five put
+ * together by an order of magnitude.
+ */
 export function lockedFraction(rows) {
-  const held = rows.reduce((s, r) => s + r.reserve, 0);
-  const got  = rows.reduce((s, r) => s + r.available, 0);
-  return held > 0 ? 1 - got / held : 0;
+  if (!rows.length) return 0;
+  const total = rows.reduce((s, r) =>
+    s + (r.reserve > 0 ? 1 - r.available / r.reserve : 0), 0);
+  return total / rows.length;
 }

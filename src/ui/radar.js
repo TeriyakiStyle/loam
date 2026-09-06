@@ -41,11 +41,14 @@ function polygon(cx, cy, r, values) {
  * letters in the ring between the two.
  *
  * @param axes  [{ key, symbol, name }]
- * @param geom  { cx, cy, r, labelGap, bezel, webs, pick }
+ * @param geom  { cx, cy, r, labelGap, valueGap, bezel, webs, targetAt, pick }
  *
- * `pick` turns the axis letters into buttons — see the labels below.
+ * `valueGap` puts a live figure on each axis, further out than its letter.
+ * `targetAt` (0–1) draws the one web that carries a meaning.
+ * `pick` turns the pair into a button — see the labels below.
  */
-export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4,
+export function radarHTML(axes, { cx, cy, r, labelGap = 26, valueGap = 0,
+                                  bezel = 0, webs = 4, targetAt = 0,
                                   pick = false }) {
   const n = axes.length;
 
@@ -55,6 +58,12 @@ export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4,
     return `<path class="web" d="M${pts} Z"/>`;
   }).join('\n      ');
 
+  // The one web that means something. Everything else here is graph paper;
+  // this is the line the reading is FOR — cross it and the soil has enough.
+  const goal = targetAt
+    ? `<path class="web-target" d="M${polygon(cx, cy, r * targetAt, Array(n).fill(1))} Z"/>`
+    : '';
+
   const spokes = axes.map((_, i) => {
     const [x, y] = point(cx, cy, r, i, n, 1);
     return `<line class="spoke" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
@@ -63,21 +72,39 @@ export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4,
   // Labels ride their own circle between the web and the bezel, centred on it
   // rather than anchored outward — they belong to the ring, not to the web.
   //
-  // With `pick` on, each one is wrapped in a button: a transparent disc gives
-  // it a target worth aiming at (a two-letter glyph is a tiny thing to hit on
-  // a phone), and role/tabindex make it reachable without a pointer at all.
+  // The figure sits one step further out along the same spoke. Radially
+  // outward is the only direction that is guaranteed clear of the polygon at
+  // every angle, and putting the number where the axis already is means the
+  // shape and its value are read in one movement rather than two — which is
+  // what a separate list of bars underneath could never do, however tidy it
+  // was, because it made you look somewhere else and match them up again.
+  //
+  // With `pick` on, the pair is wrapped in a button: a transparent disc over
+  // both gives it a target worth aiming at, and role/tabindex make it
+  // reachable without a pointer at all.
   const labels = axes.map((axis, i) => {
     const a = axisAngle(i, n);
-    const x = (cx + Math.cos(a) * (r + labelGap)).toFixed(1);
-    const y = (cy + Math.sin(a) * (r + labelGap)).toFixed(1);
-    const text = symbol => `<text class="axis-label" x="${x}" y="${y}"
+    const at = rr => [(cx + Math.cos(a) * rr).toFixed(1), (cy + Math.sin(a) * rr).toFixed(1)];
+    const [lx, ly] = at(r + labelGap);
+    const [vx, vy] = at(r + valueGap);
+
+    const letter = `<text class="axis-label" x="${lx}" y="${ly}"
             text-anchor="middle" dominant-baseline="middle"
-            data-axis="${axis.key}">${symbol}</text>`;
-    if (!pick) return text(`${axis.symbol}<title>${axis.name}</title>`);
+            data-axis="${axis.key}">${axis.symbol}${pick ? '' : `<title>${axis.name}</title>`}</text>`;
+    const value = valueGap
+      ? `<text class="axis-value" x="${vx}" y="${vy}"
+            text-anchor="middle" dominant-baseline="middle"
+            data-value="${axis.key}"></text>`
+      : '';
+
+    if (!pick) return letter + value;
+
+    const [hx, hy] = at(r + (labelGap + (valueGap || labelGap)) / 2);
+    const hr = (Math.abs((valueGap || labelGap) - labelGap) / 2 + 15).toFixed(1);
     return `<g class="axis-pick" data-pick="${axis.key}" role="button" tabindex="0"
             aria-expanded="false" aria-label="${axis.name}">
-        <circle class="axis-hit" cx="${x}" cy="${y}" r="${Math.max(16, labelGap * 0.6).toFixed(1)}"/>
-        ${text(axis.symbol)}
+        <circle class="axis-hit" cx="${hx}" cy="${hy}" r="${hr}"/>
+        ${letter}${value}
       </g>`;
   }).join('\n      ');
 
@@ -86,6 +113,10 @@ export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4,
     ? `<circle class="web-bezel" cx="${cx}" cy="${cy}" r="${bezel}"/>`
     : '';
 
+  // Order matters, and the target goes on TOP of the plots. It is the line
+  // the reader is measuring against, so it is the one thing on the face that
+  // must never be hidden — and at rest a healthy bed sits almost exactly on
+  // it, which is precisely when being painted over would lose it.
   return `<g class="radar">
       ${ring}
       ${rings}
@@ -93,6 +124,7 @@ export function radarHTML(axes, { cx, cy, r, labelGap = 26, bezel = 0, webs = 4,
       <path class="plot-was"       data-was      d="M${polygon(cx, cy, r, flat)} Z" hidden/>
       <path class="plot-reserve"   data-reserve  d="M${polygon(cx, cy, r, flat)} Z"/>
       <path class="plot-available" data-available d="M${polygon(cx, cy, r, flat)} Z"/>
+      ${goal}
       <g data-dots></g>
       ${labels}
     </g>`;
@@ -104,11 +136,29 @@ export function radarOps(root, { cx, cy, r }) {
   const reserve   = root.querySelector('[data-reserve]');
   const available = root.querySelector('[data-available]');
   const dots      = root.querySelector('[data-dots]');
+  const values    = new Map([...root.querySelectorAll('[data-value]')]
+    .map(node => [node.dataset.value, node]));
+  const picks     = new Map([...root.querySelectorAll('[data-pick]')]
+    .map(node => [node.dataset.pick, node]));
   const NS = 'http://www.w3.org/2000/svg';
 
   return {
     set(rows) {
       const n = rows.length;
+
+      // The figure on each axis, and — since a group's aria-label replaces
+      // whatever is inside it — the same figure spoken as part of the name.
+      // Both come from the caller: this file plots numbers, it does not know
+      // what they are measuring or what a reader should be told about them.
+      for (const row of rows) {
+        const node = values.get(row.key);
+        if (!node) continue;
+        node.textContent = row.figure ?? '';
+        node.classList.toggle('is-short', Boolean(row.short));
+        const pick = picks.get(row.key);
+        if (pick && row.label) pick.setAttribute('aria-label', row.label);
+      }
+
       // `was` is optional: pass it and the high-water mark appears.
       const marks = rows.map(x => x.was);
       if (marks.every(v => typeof v === 'number')) {

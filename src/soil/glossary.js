@@ -30,12 +30,15 @@ export const FIELDS = [
   { key: 'lack',  label: 'Short of it' },
   { key: 'comes', label: 'Where it comes from' },
   { key: 'goes',  label: 'Where it goes' },
+  { key: 'targetWhy', label: 'About that target' },
 ];
 
 export const GLOSSARY = {
   N: {
     slug: 'nitrogen',
     tagline: 'Leaf and stem. Needed most, held worst.',
+    target: '30 ppm nitrate-N',
+    targetWhy: `Above about 30 ppm of nitrate-N, more nitrogen stops raising yield and starts costing it — the UMass pre-sidedress test is built on that threshold.`,
     role: `Every protein and every chlorophyll molecule is built around it.
       Plants draw more nitrogen from the soil than anything else on this
       chart, and it is the difference between a thin plant and a lush one.`,
@@ -59,6 +62,8 @@ export const GLOSSARY = {
   S: {
     slug: 'sulfur',
     tagline: 'Two amino acids, and most of what you can taste.',
+    target: '15 ppm sulfate-S',
+    targetWhy: `Iowa State treats anything under 15 ppm as low; Oregon State's no-response band starts around 5.`,
     role: `Two of the twenty amino acids carry a sulfur atom, and proteins
       fold around the bonds between them. It is also what makes an onion
       sharp, a brassica bitter and mustard hot.`,
@@ -78,6 +83,8 @@ export const GLOSSARY = {
   K: {
     slug: 'potassium',
     tagline: 'Never built into anything. Runs everything.',
+    target: '150 ppm exchangeable K',
+    targetWhy: `Oregon State's low/medium boundary. Iowa State calls above 125 sufficient, Penn State's vegetable optimum runs lower at 70–140 — the spread is real and worth knowing about.`,
     role: `Potassium is the one nutrient here that never becomes part of a
       structure. It stays a loose ion, and it spends its time opening and
       closing stomata, balancing water, and switching enzymes on. It is why
@@ -98,6 +105,8 @@ export const GLOSSARY = {
   Ca: {
     slug: 'calcium',
     tagline: 'Mortar. Placed once, never moved again.',
+    target: '1000 ppm exchangeable Ca',
+    targetWhy: `Wisconsin's ideal for loams is 600–1000; below 300–400 a lab starts recommending lime. Calcium is measured in thousands where the others are in tens, which is why the chart compares shares of target rather than raw numbers.`,
     role: `Calcium cements one cell wall to the next and holds membranes
       together. It is structural rather than metabolic — laid down as the
       cell is built and never recovered afterwards.`,
@@ -118,6 +127,8 @@ export const GLOSSARY = {
   P: {
     slug: 'phosphorus',
     tagline: 'Energy, roots and seed — through the narrowest window here.',
+    target: '50 ppm Bray-1 P',
+    targetWhy: `Penn State's optimum for mixed vegetables is 35–70 ppm. Watch the method: Olsen phosphorus, used on alkaline soils, reads roughly half of Bray-1 for the same ground.`,
     role: `Phosphorus is energy. ATP, DNA, and the phospholipids of every
       membrane. What you see of it is root growth, flowering and seed set.`,
     curve: `The narrowest window on the chart, and squeezed from both sides.
@@ -138,6 +149,8 @@ export const GLOSSARY = {
   Mg: {
     slug: 'magnesium',
     tagline: 'The atom at the centre of green.',
+    target: '100 ppm exchangeable Mg',
+    targetWhy: `Penn State's optimum; Wisconsin's range for loams is 100–500.`,
     role: `A magnesium atom sits at the centre of every chlorophyll molecule.
       Without it a leaf cannot be green, whatever else the soil has.`,
     curve: `It runs with calcium — more available as the soil turns
