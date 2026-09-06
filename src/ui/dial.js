@@ -34,7 +34,12 @@ const DEG = Math.PI / 180;
 // labels at r + 19, and on the diagonal arcs radial separation projects into
 // much less horizontal separation — so this is set from the worst case, not
 // from how it looks at the top of the circle.
-const VALUE_GAP = 68;
+const VALUE_GAP = { primary: 68, secondary: 56 };
+
+// The primary dial is drawn heavier throughout. Stroke weights and type sizes
+// live in the stylesheet; these are the bits SVG needs as attributes.
+const KNOB = { primary: 9, secondary: 7.5 };
+const PIP  = { primary: 3.2, secondary: 2.6 };
 
 const at = (cx, cy, r, deg) => [cx + Math.cos(deg * DEG) * r, cy + Math.sin(deg * DEG) * r];
 
@@ -44,7 +49,7 @@ const at = (cx, cy, r, deg) => [cx + Math.cos(deg * DEG) * r, cy + Math.sin(deg 
  * @param ring  a definition from RINGS
  * @param geom  { cx, cy, r, a0, a1 }
  */
-export function dialHTML(ring, { cx, cy, r, a0, a1 }) {
+export function dialHTML(ring, { cx, cy, r, a0, a1, tone = 'primary' }) {
   const span = ring.max - ring.min;
   const norm = v => (v - ring.min) / span;
   const angleOf = t => a0 + t * (a1 - a0);
@@ -95,10 +100,10 @@ export function dialHTML(ring, { cx, cy, r, a0, a1 }) {
     : '';
 
   const [mx, my] = at(cx, cy, r, angleOf(norm(ring.start)));
-  const [vx, vy] = at(cx, cy, r + VALUE_GAP, angleOf(norm(ring.start)));
+  const [vx, vy] = at(cx, cy, r + VALUE_GAP[tone], angleOf(norm(ring.start)));
   const zoned = Boolean(ring.zones);
 
-  return `<g class="dial" data-dial="${ring.key}">
+  return `<g class="dial dial--${tone}" data-dial="${ring.key}">
       <defs>
         <linearGradient id="${id}" gradientUnits="userSpaceOnUse"
                         x1="${gx1.toFixed(1)}" y1="${gy1.toFixed(1)}"
@@ -120,8 +125,8 @@ export function dialHTML(ring, { cx, cy, r, a0, a1 }) {
          aria-label="${ring.label}"
          aria-valuemin="${ring.min}" aria-valuemax="${ring.max}"
          aria-valuenow="${ring.start}" aria-valuetext="${ring.format(ring.start)}">
-        <circle class="dial-knob" r="9"/>
-        <circle class="dial-pip"  r="3.2"/>
+        <circle class="dial-knob" r="${KNOB[tone]}"/>
+        <circle class="dial-pip"  r="${PIP[tone]}"/>
       </g>
 
       <!-- The reading rides along with the marker rather than sitting in a
@@ -143,7 +148,7 @@ export function dialHTML(ring, { cx, cy, r, a0, a1 }) {
  * Live handle. `onChange(value)` fires whenever the marker moves.
  * Returns { set, value, destroy }.
  */
-export function dialOps(root, ring, { cx, cy, r, a0, a1 }, onChange) {
+export function dialOps(root, ring, { cx, cy, r, a0, a1, tone = 'primary' }, onChange) {
   const g       = root.querySelector(`[data-dial="${ring.key}"]`);
   const hit     = g.querySelector('[data-hit]');
   const marker  = g.querySelector('[data-marker]');
@@ -154,6 +159,9 @@ export function dialOps(root, ring, { cx, cy, r, a0, a1 }, onChange) {
   const span    = ring.max - ring.min;
   const sweep   = a1 - a0;
   const quantum = ring.step || 0.1;
+
+  const gap = VALUE_GAP[tone];
+  const view = svg.viewBox?.baseVal;
 
   let value = ring.start;
 
@@ -171,12 +179,33 @@ export function dialOps(root, ring, { cx, cy, r, a0, a1 }, onChange) {
     marker.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
     marker.setAttribute('aria-valuenow', value.toFixed(2));
 
-    const [vx, vy] = at(cx, cy, r + VALUE_GAP, a);
-    reading.setAttribute('transform', `translate(${vx.toFixed(1)} ${vy.toFixed(1)})`);
     value$.textContent = `${ring.label} ${ring.format(value)}`;
-
     const zone = zoneLabel(ring, value);
     if (zone$) zone$.textContent = zone;
+
+    // Text first, then position: the reading is nudged back inside the canvas
+    // if a long zone name would hang off the edge. Without this the canvas has
+    // to be sized for the widest word the dial can ever say, which leaves the
+    // instrument itself small and a lot of empty margin around it.
+    const [vx, vy] = at(cx, cy, r + gap, a);
+    reading.setAttribute('transform', `translate(${vx.toFixed(1)} ${vy.toFixed(1)})`);
+    if (view) {
+      try {
+        const bb = reading.getBBox();
+        if (bb.width) {
+          const pad = 4;
+          let x = vx, y = vy;
+          if (x + bb.x < pad) x = pad - bb.x;
+          else if (x + bb.x + bb.width > view.width - pad)
+            x = view.width - pad - bb.x - bb.width;
+          if (y + bb.y < pad) y = pad - bb.y;
+          else if (y + bb.y + bb.height > view.height - pad)
+            y = view.height - pad - bb.y - bb.height;
+          if (x !== vx || y !== vy)
+            reading.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+        }
+      } catch { /* not laid out yet */ }
+    }
     // The region belongs in the accessible reading too, not just the picture.
     marker.setAttribute('aria-valuetext',
       zone ? `${ring.format(value)}, ${zone}` : ring.format(value));

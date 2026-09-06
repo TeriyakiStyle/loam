@@ -27,35 +27,41 @@ const R_LABEL = 130;   // where the letters sit
 const R_BEZEL = 164;   // the circle around them
 const R_DIAL  = 198;   // every dial rides this one ring
 
-// Three equal arcs with equal gaps, centred on the top, the lower left and
-// the lower right. SVG degrees: 270 is up, 150 is lower left, 30 is lower
-// right. Each arc's midpoint is its ring's ideal, which is what makes the
-// triangle mean something.
+// Three arcs centred on the top, the lower left and the lower right. SVG
+// degrees: 270 is up, 150 is lower left, 30 is lower right. The CENTRES stay
+// 120° apart whatever the spans are, which is what keeps the three markers
+// making an equilateral triangle when everything is where it should be.
+//
+// The spans are not equal, on purpose. pH gets the long arc and the heavy
+// weight because it is the first thing to check and the one that gates the
+// others; temperature and water are shorter and lighter. Three arcs of the
+// same length and the same colour range read as three equal concerns, which
+// is not what the soil says.
 //
 // `flip` mirrors an arc's direction. The two lower dials both put their
 // minimum at the bottom of the face and climb outward — cold at the bottom
 // rising to hot up the left, dry at the bottom rising to drowned up the
 // right. Without it one of them runs backwards against the other and the
 // pair reads as a mistake.
-const ARC_SPAN = 106;
 const ARCS = {
-  ph:       { centre: 270, flip: false },   // acid left, alkaline right
-  temp:     { centre: 150, flip: false },   // cold at the bottom
-  moisture: { centre:  30, flip: true  },   // dry at the bottom
+  ph:       { centre: 270, span: 118, flip: false, tone: 'primary'   },
+  temp:     { centre: 150, span:  86, flip: false, tone: 'secondary' },
+  moisture: { centre:  30, span:  86, flip: true,  tone: 'secondary' },
 };
 
 const arcFor = key => {
-  const { centre, flip } = ARCS[key];
-  const lo = centre - ARC_SPAN / 2;
-  const hi = centre + ARC_SPAN / 2;
-  return flip ? { a0: hi, a1: lo } : { a0: lo, a1: hi };
+  const { centre, span, flip, tone } = ARCS[key];
+  const lo = centre - span / 2;
+  const hi = centre + span / 2;
+  return { ...(flip ? { a0: hi, a1: lo } : { a0: lo, a1: hi }), tone };
 };
 
 export function render(el, _store) {
-  // Sized from the furthest thing drawn: a reading riding the outside of an
-  // arc, plus the widest zone name it can show. Measured rather than guessed —
-  // "very strongly alkaline" at the end of the pH arc is the worst case.
-  const margin = 134;
+  // The canvas no longer has to fit the widest word the dials can ever say —
+  // the reading nudges itself back inside when a long zone name would hang
+  // off the edge. So this is sized for the graphics plus a little air, which
+  // is what lets the instrument itself be big on the page.
+  const margin = 104;
   const half   = R_DIAL + margin;
   const size   = half * 2;
   const cx = half;

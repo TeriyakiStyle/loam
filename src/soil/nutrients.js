@@ -300,13 +300,18 @@ export const RINGS = [
       { upTo: Infinity, label: 'baking'        },
     ],
 
+    // Two poles and nothing else: cold blue to hot red, through a quiet
+    // neutral at the middle. No green — pH owns the full spectrum on this
+    // face, and a second rainbow would just compete with it. A temperature
+    // scale that runs blue to red needs no explaining at all.
     ramp: [
-      [0,  'hsl(205, 52%, 52%)'],
-      [10, 'hsl(180, 40%, 48%)'],
-      [20, 'hsl(120, 40%, 45%)'],
-      [28, 'hsl(48, 58%, 52%)'],
-      [34, 'hsl(24, 62%, 52%)'],
-      [40, 'hsl(4, 62%, 50%)'],
+      [0,  'hsl(206, 58%, 50%)'],
+      [8,  'hsl(198, 44%, 55%)'],
+      [16, 'hsl(38, 22%, 62%)'],
+      [22, 'hsl(32, 30%, 60%)'],
+      [28, 'hsl(24, 56%, 56%)'],
+      [34, 'hsl(12, 62%, 52%)'],
+      [40, 'hsl(2, 66%, 48%)'],
     ],
 
     effect: (nutrient, v) => curve(TEMP_CURVES[nutrient], v),
@@ -347,13 +352,17 @@ export const RINGS = [
       { upTo: Infinity, label: 'waterlogged'      },
     ],
 
+    // Dry dust to standing water: a greyish tan at the wilting point,
+    // deepening through teal to a dark blue at saturation. One direction,
+    // no spectrum — the reading is "how much water", and the colour should
+    // say only that.
     ramp: [
-      [0,   'hsl(32, 48%, 50%)'],
-      [40,  'hsl(48, 46%, 50%)'],
-      [75,  'hsl(150, 40%, 44%)'],
-      [100, 'hsl(182, 44%, 46%)'],
-      [125, 'hsl(205, 50%, 50%)'],
-      [150, 'hsl(228, 46%, 44%)'],
+      [0,   'hsl(36, 16%, 58%)'],
+      [40,  'hsl(40, 20%, 57%)'],
+      [70,  'hsl(178, 26%, 52%)'],
+      [100, 'hsl(196, 42%, 48%)'],
+      [125, 'hsl(210, 48%, 40%)'],
+      [150, 'hsl(224, 52%, 30%)'],
     ],
 
     effect: (nutrient, v) => curve(MOISTURE_CURVES[nutrient], v),

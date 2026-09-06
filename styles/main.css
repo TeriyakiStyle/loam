@@ -582,7 +582,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   /* The canvas is wider than it is tall (the zone names need room at the ends
      of the arc), so height alone would leave the dial looking small. Take the
      lesser of the two budgets and let whichever is scarcer decide. */
-  height: min(clamp(180px, 42vh, 470px), 40vw);
+  height: min(clamp(190px, 58vh, 560px), 46vw, 100vh - 430px);
   width: auto;
   max-width: 100%;
   overflow: visible;
@@ -607,7 +607,7 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 }
 .axis-label {
   fill: currentColor;
-  font-size: 15px;
+  font-size: 17px;
   letter-spacing: 0.06em;
   opacity: 0.75;
 }
@@ -649,10 +649,21 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 
 .dial-track {
   fill: none;
-  stroke-width: 7;
+  stroke-width: 8;
   stroke-linecap: round;
-  opacity: 0.9;
+  opacity: 0.92;
 }
+
+/* Hierarchy of concern. pH is the dial you read first — it is heavier, longer
+   and the only one carrying a full spectrum. Temperature and water are drawn
+   back a step so the face has a first thing to look at. */
+.dial--secondary .dial-track      { stroke-width: 5.5; opacity: 0.85; }
+.dial--secondary .dial-tick-label { font-size: 12px; opacity: 0.5; }
+.dial--secondary .dial-tick       { opacity: 0.28; }
+.dial--secondary .dial-sweet      { opacity: 0.34; stroke-width: 1.6; }
+.dial--secondary .dial-value      { font-size: 14px; opacity: 0.78; }
+.dial--secondary .dial-zone       { font-size: 10.5px; opacity: 0.48; }
+.dial--secondary .dial-knob       { stroke-width: 1.7; }
 /* an invisible fat arc so the whole dial is grabbable, not just the knob */
 .dial-hit {
   fill: none;
@@ -669,9 +680,13 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   stroke-linecap: round;
 }
 .dial-tick { stroke: currentColor; opacity: 0.3; stroke-width: 1; }
+/* Type inside the SVG is in viewBox units, so it scales down with the
+   instrument. These are set larger than they look here on purpose: at the
+   sizes the page actually renders — roughly three-quarters — they land back
+   around 10 to 12 real pixels. */
 .dial-tick-label {
   fill: currentColor;
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0.5;
   font-variant-numeric: tabular-nums;
 }
@@ -693,14 +708,14 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
    carries the colour; the words carry the meaning. */
 .dial-value {
   fill: currentColor;
-  font-size: 13px;
+  font-size: 16px;
   letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
   opacity: 0.9;
 }
 .dial-zone {
   fill: currentColor;
-  font-size: 9.5px;
+  font-size: 11.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   opacity: 0.55;
@@ -807,8 +822,11 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
    what you cannot see. */
 @media (max-height: 860px) {
   .instrument { gap: 0.4rem; padding-bottom: 0.6rem; }
-  .footnote { font-size: 0.72rem; }
+  /* The caveat can go; the instrument cannot. Dropping it buys back the
+     height the dials need to stay readable on a laptop. */
+  .footnote { display: none; }
   .levels { gap: 0.3rem 1.2rem; }
+  .scope-svg { height: min(clamp(190px, 58vh, 560px), 46vw, 100vh - 372px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
