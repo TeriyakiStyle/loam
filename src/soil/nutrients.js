@@ -532,8 +532,12 @@ export const SEASON = {
   noun: 'time',
   min: 0,
   max: 90,
+  // Half-day steps. The day count reads as whole days either way, but the
+  // finer grain is what lets the sun cross the sky in a fade rather than a
+  // switch — there have to be several samples inside the artwork's own
+  // transition or it can only ever be lit or unlit.
   start: 0,
-  step: 1,
+  step: 0.5,
   ticks: [0, 30, 60, 90],
   format: v => v.toFixed(0),
   zones: [

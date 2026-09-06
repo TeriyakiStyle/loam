@@ -97,12 +97,27 @@ function scopeCSS(css) {
   return scopeBlock(css);
 }
 
-// Parked, so the only thing that moves the artwork is the season track.
+// Parked, so the only thing that moves the artwork is the season track — and
+// parked on TWO clocks, not one.
+//
+// The artwork has always had two: a fast one turning sun to night and back,
+// and a slow one stepping the moon through a lunation. In the file they share
+// `--dur`, which is right when it plays on its own. Seeked, it is a trap: one
+// model day is exactly one turn of the fast clock, so the sun can only ever be
+// full on or full off, snapping between them a day at a time.
+//
+// Giving them separate delays unpicks that. The moon still steps once per day,
+// so a season is still three lunations. The sun is stretched over many days,
+// so it rises and sets a handful of times across the whole track — with the
+// artwork's own fade doing the work in between.
 const SEEK_RULE = `
-    .${SCOPE} .sunDisc, .${SCOPE} .rays, .${SCOPE} .night,
+    .${SCOPE} .sunDisc, .${SCOPE} .rays, .${SCOPE} .night {
+      animation-play-state: paused;
+      animation-delay: var(--seek-sun, 0s);
+    }
     .${SCOPE} .halfLit, .${SCOPE} .term {
       animation-play-state: paused;
-      animation-delay: var(--seek, 0s);
+      animation-delay: var(--seek-moon, 0s);
     }`;
 
 /**
@@ -138,23 +153,19 @@ export function clockSVG(size = 38) {
       </svg>`);
 }
 
+// Model days per sun-to-night-to-sun turn. Over ninety days that is five
+// risings and settings — enough to say "time is passing", slow enough that the
+// artwork's fade has room to actually be a fade rather than a switch.
+const DAYS_PER_TURN = 18;
+
 /**
  * Park the artwork on a given day.
  *
- * `dayLength` is the artwork's own `--dur` — two seconds, one full sun-to-night
- * -to-sun turn. Which is the trap: seeking a whole number of days is seeking a
- * whole number of TURNS, so every day lands on frame zero and you get broad
- * daylight for all ninety of them. The moon was stepping through its phases
- * correctly the entire time and never once being on screen for it.
- *
- * So odd days are nudged 45% into the cycle, which is the middle of that day's
- * night. Even days keep the sun. Dragging the track then alternates day, night,
- * day, night — one per day, which is what "days are passing" looks like — and
- * because the slow clock still lands inside the right step, every moon shown is
- * that day's true phase. Across ninety days you get about three lunations.
+ * `dayLength` is the artwork's own `--dur`, two seconds. The moon keeps that
+ * rate exactly — one step per day, and so three lunations over a season. The
+ * sun is slowed by DAYS_PER_TURN, which is the only reason it can fade at all.
  */
 export function seekClock(el, day, dayLength = 2) {
-  const NIGHT = 0.45;                       // safely inside the 19–71% night
-  const at = day + (Math.round(day) % 2 ? NIGHT : 0);
-  el.style.setProperty('--seek', `${(-at * dayLength).toFixed(3)}s`);
+  el.style.setProperty('--seek-sun',  `${(-day / DAYS_PER_TURN * dayLength).toFixed(3)}s`);
+  el.style.setProperty('--seek-moon', `${(-day * dayLength).toFixed(3)}s`);
 }

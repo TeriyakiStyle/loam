@@ -200,7 +200,7 @@ export function render(el, _store) {
     // what has been taken out as well as what is locked away.
     radar.set(days ? rows.map(r => ({ ...r, was: SAMPLE_BED[r.key] })) : rows);
 
-    dayText.textContent = days > 0 ? `DAY ${days}` : '';
+    dayText.textContent = days > 0 ? `DAY ${Math.round(days)}` : '';
 
     for (const row of rows) {
       const level = levels[row.key];
@@ -242,7 +242,7 @@ export function render(el, _store) {
     const start = NUTRIENTS.reduce((s, n) => s + SAMPLE_BED[n.key], 0);
     const kept  = gone > 0 ? taken / gone : 0;
     const ledger = !days ? ''
-      : ` Held here for ${days} days, this soil loses
+      : ` Held here for ${Math.round(days)} days, this soil loses
           ${Math.round(gone / start * 100)}% of what it started with —
           ${kept >= 0.6 ? `<em>most of it into the crop</em>, which is what a
              harvest is`
