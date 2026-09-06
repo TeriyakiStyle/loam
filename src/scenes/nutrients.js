@@ -27,26 +27,37 @@ const R_LABEL = 130;   // where the letters sit
 const R_BEZEL = 164;   // the circle around them
 const R_DIAL  = 198;   // every dial rides this one ring
 
-// Three arcs centred on the top, the lower left and the lower right. SVG
-// degrees: 270 is up, 150 is lower left, 30 is lower right. The CENTRES stay
-// 120° apart whatever the spans are, which is what keeps the three markers
-// making an equilateral triangle when everything is where it should be.
+// Three arcs, and the shares are the hierarchy. SVG degrees: 270 is up, 90
+// is down, 0 is right.
 //
-// The spans are not equal, on purpose. pH gets the long arc and the heavy
-// weight because it is the first thing to check and the one that gates the
-// others; temperature and water are shorter and lighter. Three arcs of the
-// same length and the same colour range read as three equal concerns, which
-// is not what the soil says.
+// pH takes the whole upper HALF of the circle — 180° of it — and temperature
+// and water divide what is left, 66° each with 16° of clear space between
+// all three. Half the instrument against a fifth: that is a difference you
+// read before you read anything, and it says what the soil says. pH is the
+// first thing to check and it gates the other two; they modulate what it has
+// already decided.
 //
-// `flip` mirrors an arc's direction. The two lower dials both put their
-// minimum at the bottom of the face and climb outward — cold at the bottom
+//        pH   180 → 360    the whole top half
+//   moisture    82 →  16    lower right
+//       temp    98 → 164    lower left
+//
+// The two lower arcs sit 41° either side of straight down, mirrored, and both
+// put their MINIMUM at the bottom and climb outward — cold at the bottom
 // rising to hot up the left, dry at the bottom rising to drowned up the
-// right. Without it one of them runs backwards against the other and the
-// pair reads as a mistake.
+// right. `flip` is what reverses one of them; without it the pair runs in
+// opposite senses and reads as a mistake.
+//
+// A note on what this costs. When the arcs were equal thirds, three markers
+// at their sweet spots made an equilateral triangle. They no longer do —
+// the shape is now isosceles. What survives, and is the part you actually
+// read, is the MIRROR SYMMETRY: at rest the two lower markers are reflections
+// of each other and the pH marker sits at top centre. Lopsided still means
+// something is off, and which way it leans still says what.
+const GAP = 16;
 const ARCS = {
-  ph:       { centre: 270, span: 118, flip: false, tone: 'primary'   },
-  temp:     { centre: 150, span:  86, flip: false, tone: 'secondary' },
-  moisture: { centre:  30, span:  86, flip: true,  tone: 'secondary' },
+  ph:       { centre: 270, span: 180, flip: false, tone: 'primary'   },
+  temp:     { centre: 131, span:  66, flip: false, tone: 'secondary' },
+  moisture: { centre:  49, span:  66, flip: true,  tone: 'secondary' },
 };
 
 const arcFor = key => {
@@ -57,15 +68,18 @@ const arcFor = key => {
 };
 
 export function render(el, _store) {
-  // The canvas no longer has to fit the widest word the dials can ever say —
-  // the reading nudges itself back inside when a long zone name would hang
-  // off the edge. So this is sized for the graphics plus a little air, which
-  // is what lets the instrument itself be big on the page.
-  const margin = 104;
-  const half   = R_DIAL + margin;
-  const size   = half * 2;
-  const cx = half;
-  const cy = half;
+  // Not square, and that is what makes the drawing big. The pH arc now ends
+  // at the horizontal, which is exactly where its longest zone names sit, so
+  // the canvas needs width there — but nothing reaches nearly as far above or
+  // below, and a square canvas would spend that height on nothing. Trimming
+  // the vertical margin is worth more than the extra width costs, because the
+  // instrument is sized by its height.
+  const marginX = 170;   // the long zone names at the ends of the pH arc
+  const marginY = 96;    // the reading above the apex, the lower arcs below
+  const width  = (R_DIAL + marginX) * 2;
+  const height = (R_DIAL + marginY) * 2;
+  const cx = width / 2;
+  const cy = height / 2;
 
   const geom = {
     cx, cy,
@@ -88,7 +102,7 @@ export function render(el, _store) {
     <section class="instrument">
       <h1 class="sr-only">Nutrients</h1>
 
-      <svg viewBox="0 0 ${size} ${size}" class="scope-svg"
+      <svg viewBox="0 0 ${width} ${height}" class="scope-svg"
            role="group" aria-label="Nutrient availability">
         ${RINGS.map(ring => dialHTML(ring, dialGeom(ring))).join('\n        ')}
         ${radarHTML(NUTRIENTS, geom)}

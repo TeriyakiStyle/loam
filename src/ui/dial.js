@@ -11,10 +11,12 @@
 // these more is another way to be wrong.
 //
 // Because the ideal is the middle of the range, and each arc is placed so its
-// own middle points outward, all three markers sit at the twelve o'clock of
-// their own arc when conditions are right — three evenly spaced arcs, three
-// markers, an equilateral triangle. Lopsided means something is off, and
-// which way it leans says what.
+// own middle points outward, every marker sits at the twelve o'clock of its
+// own arc when conditions are right. The arcs are not the same length — the
+// scene gives pH half the circle and the other two a fifth each — so the
+// markers make an isosceles rather than an equilateral triangle, mirrored
+// about the vertical. Lopsided still means something is off, and which way it
+// leans still says what.
 //
 // Angles are SVG degrees (0 = right, 90 = down). a0 is where the MINIMUM
 // sits and a1 the maximum, and a1 may be either side of a0 — a dial can run
@@ -34,7 +36,7 @@ const DEG = Math.PI / 180;
 // labels at r + 19, and on the diagonal arcs radial separation projects into
 // much less horizontal separation — so this is set from the worst case, not
 // from how it looks at the top of the circle.
-const VALUE_GAP = { primary: 68, secondary: 56 };
+const VALUE_GAP = { primary: 68, secondary: 64 };
 
 // The primary dial is drawn heavier throughout. Stroke weights and type sizes
 // live in the stylesheet; these are the bits SVG needs as attributes.
