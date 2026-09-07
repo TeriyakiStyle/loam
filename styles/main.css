@@ -550,6 +550,118 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 /* the closing line leaves more slowly than a mid-sequence line change */
 .subtitle.is-closing { transition-duration: 1100ms; }
 
+/* Sow: a rooted centre and a circular memory of the growing season. */
+.sow-sequence { width: 100%; gap: .6rem; }
+.sow-stage {
+  --size: min(640px, 88vw, max(360px, 100svh - 245px));
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  flex: none;
+}
+.sow-orbit {
+  position: absolute; inset: 10%; border: 1px solid var(--line);
+  border-radius: 50%; opacity: 0;
+  transition: opacity 1400ms ease;
+}
+.sow-stage.is-playing .sow-orbit { opacity: .55; }
+.sow-cube {
+  position: absolute; width: 29%; height: auto; left: 50%; top: 58%;
+  transform: translate(-50%, -26%);
+  border: 0; padding: 0; background: none;
+  transition: opacity 2400ms ease, filter 800ms ease;
+}
+.sow-start { cursor: pointer; z-index: 2; }
+.sow-start img { display: block; width: 100%; }
+.sow-start:disabled { cursor: default; }
+.sow-start:not(:disabled):hover { filter: brightness(1.12); }
+.sow-start:focus-visible { outline: 2px solid var(--ink); outline-offset: 8px; }
+.sow-final { opacity: 0; pointer-events: none; z-index: 2; }
+.sow-plants { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.sow-plant {
+  position: absolute; left: 50%; top: 58%; width: 38%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: transform 1500ms cubic-bezier(.22,.61,.36,1), top 1500ms ease, opacity 1000ms ease;
+}
+.sow-main-art { position: absolute; width: 100%; top: -75%; transition: opacity 650ms ease; }
+.sow-main-art svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sow-memory-art { position: absolute; inset: 0; opacity: 0; transition: opacity 900ms ease; }
+.sow-memory-art svg { width: 100%; height: 100%; }
+.sow-plant[data-at="current"] { opacity: 1; z-index: 2; }
+.sow-plant[data-at="past"] {
+  opacity: .66; top: 50%;
+  transform: translate(-50%, -50%)
+    translate(calc(var(--dx) * var(--size) * .4), calc(var(--dy) * var(--size) * .4)) scale(.40);
+}
+.sow-plant[data-at="past"] .sow-main-art { opacity: 0; }
+.sow-plant[data-at="past"] .sow-memory-art { opacity: 1; }
+.sow-label {
+  position: absolute; top: 98%; left: 24%; width: 52%; margin: 0;
+  text-align: center; font-size: clamp(.65rem, 1.4vw, .8rem);
+  letter-spacing: .09em; text-transform: uppercase; opacity: .75;
+}
+.sow-controls { display: flex; justify-content: center; gap: .7rem; }
+.sow-controls .ghost:disabled { opacity: .25; cursor: default; }
+.sow-controls .sow-replay { opacity: .6; pointer-events: auto; }
+.sow-controls .sow-replay:disabled { visibility: hidden; }
+.sow-error { text-align: center; }
+.sow-exchange { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.sow-time {
+  position: absolute; left: 90%; top: 50%; width: 12%; transform: translate(-50%, -50%);
+  display: grid; justify-items: center;
+  opacity: 0; transition: opacity 1000ms ease; text-align: center;
+  pointer-events: none; font-size: clamp(.7rem, 1.4vw, .85rem);
+}
+.sow-time > svg { width: clamp(38px, 7vw, 56px); height: auto; overflow: visible; }
+.sow-stage.is-playing .sow-time { opacity: .85; }
+.sow-sun {
+  position: absolute; top: 19%; left: 64%; width: 5%; aspect-ratio: 1;
+  border-radius: 50%; background: #e1c57c; box-shadow: 0 0 24px #e1c57c55;
+  opacity: 0; transition: opacity 1800ms ease;
+}
+.has-sun .sow-sun { opacity: .85; }
+.sow-flow { position: absolute; width: 4px; height: 4px; border-radius: 50%; opacity: 0; }
+.sow-flow.sugar { left: calc(48% + var(--i) * 1.2%); top: 41%; background: #e6c97d; }
+.sow-flow.nutrient { left: calc(43% + var(--i) * 2%); top: 65%; background: #acd9ce; }
+.has-sugar .sugar, .has-exchange .sugar { animation: sow-sugar 3.4s calc(var(--i) * -.8s) linear infinite; }
+.has-nutrients .nutrient, .has-exchange .nutrient { animation: sow-nutrients 3.8s calc(var(--i) * -.9s) linear infinite; }
+@keyframes sow-sugar {
+  0% { transform: translate(0, 0); opacity: 0; }
+  20%, 75% { opacity: .9; }
+  100% { transform: translate(16px, 90px); opacity: 0; }
+}
+@keyframes sow-nutrients {
+  0% { transform: translate(0, 0); opacity: 0; }
+  20%, 75% { opacity: .8; }
+  100% { transform: translate(14px, -95px); opacity: 0; }
+}
+.sow-water { position: absolute; left: 50%; top: 60%; width: 3%; aspect-ratio: 1; border: 1px solid #b9dad3; border-radius: 50%; opacity: 0; }
+.has-water .sow-water { animation: sow-water 2.6s ease-out 2; }
+@keyframes sow-water { from { transform: translate(-50%, -50%) scale(.2); opacity: .75; } to { transform: translate(-50%, -50%) scale(4); opacity: 0; } }
+.is-harvesting .sow-plant[data-at="current"] .sow-main-art { filter: drop-shadow(0 0 5px #e6c97d55); }
+.sow-main-art [data-harvest-pod] { transition: opacity 1500ms ease; }
+.has-harvested .sow-plant[data-at="current"] [data-harvest-pod] { opacity: 0; }
+.sow-main-art [data-part="plant"] { transform-origin: 160px 400px; transition: transform 2200ms cubic-bezier(.45,0,.65,1), opacity 4000ms ease; }
+.is-cut .sow-plant[data-at="current"] .sow-main-art [data-part="plant"] { transform: rotate(82deg) scale(.65); }
+.is-decaying .sow-plant[data-at="current"] .sow-main-art [data-part="plant"] { opacity: 0; }
+.is-soil .sow-final { opacity: 1; }
+.is-soil .sow-start { opacity: 0; }
+.is-soil .sow-plant, .is-soil .sow-orbit, .is-soil .sow-time { opacity: 0; transition: opacity 2800ms ease; }
+.sow-stage.is-playing.is-soil .sow-orbit { opacity: 0; }
+.is-soil .sow-label { top: 84%; }
+@media (max-width: 480px) {
+  .sow-sequence { padding-inline: .5rem; }
+  .sow-sequence .subtitle { min-height: 5.8em; max-width: 34ch; }
+  .sow-flow { width: 3px; height: 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sow-stage *, .sow-stage .sow-main-art [data-part="plant"] {
+    animation: none !important; transition-duration: .01ms !important;
+  }
+  .has-sugar .sugar, .has-nutrients .nutrient { opacity: .65; }
+}
+
 /* --------------------------------------------------------------------------
    THE INSTRUMENT — Nutrients
    Rings outside are the environment; the chart inside is the outcome.
@@ -960,3 +1072,13 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
   .plot-was, .plot-reserve, .plot-available, [data-dots] circle,
   .axis-value { transition: none; }
 }
+
+/* The Sow clock is a living time cue: let the supplied sun/moon animation
+   oscillate continuously instead of parking it on a selected day. */
+.sow-time .clock-art * {
+  animation-play-state: running !important;
+  animation-delay: 0s !important;
+}
+/* The playing state keeps the time cue visible until the soil return; the
+   final state must win that cascade so the clock leaves with the old plant. */
+.sow-stage.is-soil.is-playing .sow-time { opacity: 0; }

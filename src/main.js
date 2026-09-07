@@ -15,6 +15,7 @@ import * as contact from './scenes/contact.js';
 import * as physical from './scenes/physical.js';
 import * as biological from './scenes/biological.js';
 import * as nutrients from './scenes/nutrients.js';
+import * as sow from './scenes/sow.js';
 
 const routes = {
   '/':           { scene: title,   name: 'LOAM',              bar: false },
@@ -22,7 +23,7 @@ const routes = {
 
   '/physical':   { scene: physical, name: 'LOAM — Physical',   bar: true  },
   '/biological': { scene: biological, name: 'LOAM — Biological', bar: true },
-  '/sow':        { scene: section('Sow and Grow'),
+  '/sow':        { scene: sow,
                                    name: 'LOAM — Sow and Grow', bar: true },
 
   '/nutrients':  { scene: nutrients, name: 'LOAM — Nutrients', bar: true },

@@ -47,13 +47,31 @@ export function createRunner({
   let raf = null, subTimer = null;
   let fired = 0, subAt = -1, startedAt = 0;
   let alive = true, useAudio = true, audioLive = false;
+  let lastTime = 0, progressedAt = 0;
+
+  audio.addEventListener('error', () => { useAudio = false; });
 
   function now() {
     const wall = (performance.now() - startedAt) / 1000;
-    if (useAudio && audio.currentTime > 0.05) audioLive = true;
-    if (audioLive) return audio.currentTime;
+    if (useAudio && audio.currentTime > 0.05 && !audio.ended) {
+      audioLive = true;
+      if (audio.currentTime > lastTime) {
+        lastTime = audio.currentTime;
+        progressedAt = wall;
+      }
+      if (wall - progressedAt < GRACE) return lastTime;
+    }
+    // A closing cue can fall just beyond the recording. Continue from the
+    // last audio position, also covering a file that fails after starting.
+    // A network 'stalled' event alone isn't enough: buffered audio may play on.
+    if (audioLive) {
+      useAudio = false;
+      audio.pause();
+      return lastTime + wall - progressedAt;
+    }
     if (useAudio && wall < GRACE) return 0;   // hold the first frame briefly
     useAudio = false;
+    audio.pause();
     return wall;
   }
 
@@ -94,8 +112,6 @@ export function createRunner({
       startedAt = performance.now();
       // The click that got here is what unlocks audio in a browser.
       audio.play().catch(() => { useAudio = false; });
-      audio.addEventListener('error',   () => { useAudio = false; }, { once: true });
-      audio.addEventListener('stalled', () => { useAudio = false; }, { once: true });
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(tick);
     },
@@ -107,6 +123,9 @@ export function createRunner({
       subAt = -1;
       audioLive = false;
       useAudio = true;
+      lastTime = 0;
+      progressedAt = 0;
+      audio.pause();
       try { audio.currentTime = 0; } catch { /* not seekable yet */ }
       onSub(null);
     },
