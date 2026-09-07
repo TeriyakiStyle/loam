@@ -19,7 +19,7 @@ const line=fn=>Array.from({length:401},(_,i)=>`${i?'L':'M'}${X(i/400).toFixed(2)
 const leaf=(x,y,r,s=1)=>`<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><path d="M0 0C-23 -12 -20 -43 0 -57C23 -40 22 -13 0 0Z" fill="#87925d" fill-opacity=".28"/><path d="M0 0Q-24 -25 0 -57Q24 -29 0 0M0 0L0 -53M0 -15L-10 -27M0 -28L11 -39"/></g>`;
 function specimens(){return `<g class="pj-specimen">
  <g transform="translate(110 79)"><circle r="17" fill="#ddba68" fill-opacity=".35"/><circle r="15"/>${Array.from({length:12},(_,i)=>`<path d="M0 -23L1 -30" transform="rotate(${i*30})"/>`).join('')}</g>
- <g transform="translate(380 105)"><path d="M-24 12Q-5 -15 9 -67M-11 -5L-28 -28M0 -28L20 -48"/>${leaf(0,-27,-40,.55)}${leaf(8,-54,25,.55)}${leaf(-13,-5,-55,.6)}${leaf(-6,-15,62,.55)}</g>
+ <image href="assets/harvest.svg" x="307" y="8" width="146" height="120" preserveAspectRatio="xMidYMid meet"/>
  <g transform="translate(650 83)">${Array.from({length:6},(_,i)=>`<path d="M0 0L0 -29M0 -19L-7 -25M0 -19L7 -25" transform="rotate(${60*i})"/>`).join('')}<circle r="4" fill="#9eaeb2"/></g>
  <g transform="translate(920 109)"><path d="M0 8Q-5 -20 2 -44M-1 -9Q-16 -10 -22 -27M0 -23Q12 -31 22 -33"/>${leaf(-19,-24,-55,.48)}${leaf(16,-29,52,.52)}${leaf(2,-42,12,.45)}</g>
  </g><g class="pj-season"><text x="110" y="146">High summer</text><text x="380" y="146">The harvest</text><text x="650" y="146">Deep winter</text><text x="920" y="146">First greens</text></g>`;}

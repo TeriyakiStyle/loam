@@ -39,6 +39,8 @@ const UTILITY = [
       { label: 'BBCH scale — growth stages',
         href: 'https://www.julius-kuehn.de/en/jki-publication-series/bbch-scale/',
         external: true },
+      { label: 'NTRS — NASA technical reports',
+        href: 'https://ntrs.nasa.gov/', external: true },
     ],
   },
   { label: 'Contact', href: '#/contact' },
