@@ -1,54 +1,13 @@
-// ---------------------------------------------------------------------------
-// PROSPECT — a look down the year.
-//
-// This screen is a drawing, not an instrument. Nothing on it is computed from
-// a plan, because there is no plan yet: plantings, storage losses and the
-// weather all have to exist before this can tell the truth. What it is for is
-// to fix the SHAPE of the answer while the parts are still being built —
-// six bands, a floor that belongs to the lowest of them, and a path that
-// climbs into winter.
-//
-// The art file holds the whole picture. This one gives it a page.
-// ---------------------------------------------------------------------------
-
 import { prospectSVG, runProspect, BANDS } from '../art/prospect.js';
-
-const legend = BANDS.map(b => `
-    <li><span class="pr-dot" style="background:${b.tone}"></span>${b.label}</li>`).join('');
-
-export function render(el, _store) {
-  el.innerHTML = `
-    <section class="page prospect">
-      <h1>Prospect</h1>
-      <p class="lede">A year ahead, and what is under your feet for each of it.</p>
-
-      <figure class="pr-figure">
-        ${prospectSVG()}
-        <ul class="pr-legend">${legend}</ul>
-        <figcaption>
-          Six bands, all measured the same way: what you have of that one thing
-          against what you need of it. The ground is whichever band is lowest,
-          so the floor changes hands through the year. The path he walks is the
-          requirement — it climbs through winter, because a cold body asks for
-          more. Where the ground falls below the path there is nothing beneath
-          him, and the size of that hole is the size of the hunger.
-        </figcaption>
-      </figure>
-
-      <p class="pr-note">
-        Here the stores never run out of calories. What opens the gap is
-        vitamin C, which keeps badly and comes back all at once with the first
-        spring greens. Doubling the potato harvest would not raise the floor
-        by a finger's width.
-      </p>
-
-      <p class="placeholder">
-        Concept only — every curve is drawn by hand. Nothing is wired to a
-        simulation yet.
-      </p>
-    </section>
-  `;
-
-  const stop = runProspect(el);
-  return () => stop();
+export function render(el){
+ el.innerHTML=`<section class="prospect">
+ <header class="pj-heading"><p class="pj-eyebrow">LOAM / FIELD NOTES</p><h1>Prospect</h1><p>A year of food, and the ground beneath your feet.</p><span class="pj-folio" aria-hidden="true">study no. 04</span></header>
+ <figure class="pj-sheet"><div class="pj-sheet-head"><span>A walk through the stores</span><span>summer → summer</span></div>
+ <div class="pj-scroll" tabindex="0" aria-label="Seasonal drawing. Scroll horizontally on small screens.">${prospectSVG()}</div>
+ <figcaption><span class="pj-key"><i></i>Food available</span><span class="pj-key needs"><i></i>Daily needs</span><span class="pj-caption">Above the line, feast. Below it, famine.</span></figcaption></figure>
+ <div class="pj-controls"><button type="button" data-pause>Pause walk</button><label class="pj-scrub"><span class="sr-only">Explore the year</span><input data-year type="range" min="0" max="1000" value="60" aria-label="Explore the year"></label><span data-month class="pj-current-month"></span><button type="button" data-nutrition aria-pressed="false" aria-controls="pj-nutrition-detail">Show nutrition</button></div>
+ <div class="pj-observation"><p data-status></p><span data-reading></span></div>
+ <div id="pj-nutrition-detail" data-nutrition-detail hidden><ul class="pj-legend">${BANDS.slice(1).map(b=>`<li><i style="background:${b.tone}"></i>${b.label}</li>`).join('')}</ul><p data-nutrition-note></p><p class="pj-detail-note">Each dotted line compares one nutrient with its own requirement. A nutrient deficiency is distinct from a calorie shortage.</p></div>
+ <footer class="pj-footer"><p>Harvest fills the stores. Winter draws them down.<br>What will carry you through to the first greens?</p><small>An illustrative season, drawn to explore an idea.<br>Not yet calculated from your garden or a dietary plan.</small></footer></section>`;
+ return runProspect(el);
 }

@@ -1083,126 +1083,79 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
    final state must win that cascade so the clock leaves with the old plant. */
 .sow-stage.is-soil.is-playing .sow-time { opacity: 0; }
 
-/* --------------------------------------------------------------------------
-   PROSPECT
-
-   Dusk. The nutrients screen went cool because it is an instrument; this one
-   goes cool and a shade bluer because it is about time passing, and every
-   warm thing on it is food.
-   -------------------------------------------------------------------------- */
+/* Prospect — ink, pencil and wash on a field-journal page. */
 body[data-page="prospect"] {
-  --ground: #28303A;
-  --ink:    #E9EEF2;
-  --bar:    #323C48;
-  --panel:  #3E4A57;
-  --line:   rgba(233, 238, 242, 0.20);
-  --hover:  rgba(233, 238, 242, 0.10);
-  --short:  #C0483B;   /* the one colour that means a shortfall */
+ --ground:#e9e5d8; --ink:#414735; --bar:#e2dfd0; --panel:#f7f2e7;
+ --line:rgba(65,71,53,.2); --hover:rgba(65,71,53,.07);
 }
-
-/* The drawing wants width. Everything else on the page keeps its measure. */
-.prospect { max-width: 76rem; }
-.prospect > h1, .prospect > .lede,
-.prospect > .pr-note, .prospect > .placeholder { max-width: 60ch; }
-
-.pr-figure { margin: 1.75rem 0 0; }
-
-.pr-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-  background: rgba(0, 0, 0, 0.14);
-  border-radius: 3px;
+.prospect { width:min(1200px,94vw); padding:38px 0 30px; color:var(--ink); }
+.pj-heading { position:relative; padding:0 20px 22px; }
+.pj-eyebrow { font-size:.68rem; letter-spacing:.23em; margin:0 0 8px; }
+.pj-heading h1 { font:italic 54px/1.1 Georgia,serif; margin:0; font-weight:normal; }
+.pj-heading > p:last-of-type { margin:12px 0 0; font:18px/1.5 Georgia,serif; color:#706f5e; }
+.pj-folio { position:absolute; right:22px; top:18px; font:italic 16px Georgia,serif; color:#827b65; }
+.pj-sheet { margin:0; background:#f8f3e7; border:1px solid #d3ccb9; box-shadow:0 5px 18px #5d543b0c; }
+.pj-sheet-head { display:flex; justify-content:space-between; padding:19px 27px 0; font:italic 17px Georgia,serif; color:#78705c; }
+.pj-sheet-head span:last-child { font-size:14px; }
+.pj-scroll { overflow-x:auto; }
+.pj-svg { display:block; width:100%; min-width:740px; height:auto; }
+.pj-specimen { fill:none; stroke:#727456; stroke-width:1.35; stroke-linecap:round; stroke-linejoin:round; }
+.pj-season { font:italic 18px Georgia,serif; fill:#66634e; text-anchor:middle; }
+.pj-calories { fill:none; stroke:#65734c; stroke-width:2.5; stroke-linecap:round; }
+.pj-baseline { fill:none; stroke:#544f40; stroke-width:1.4; }
+.pj-small { font:italic 15px Georgia,serif; fill:#817863; }
+.pj-margin { font:11px system-ui; letter-spacing:1.5px; fill:#85735d; text-anchor:end; }
+.pj-annotation { font:italic 21px Georgia,serif; fill:#8a7359; }
+.pj-annotation path { fill:none; stroke:#a18c6a; stroke-width:1; }
+.pj-months { font:11px system-ui; letter-spacing:1.5px; text-anchor:middle; fill:#857e6a; }
+.pj-months path { stroke:#bcb39b; }
+.pj-gap-marker { stroke:#a96c50; stroke-width:1.5; stroke-dasharray:3 5; }
+.pj-trouser,.pj-limb { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.pj-trouser { stroke:#625e4c; stroke-width:7; }
+.pj-limb { stroke:#657258; stroke-width:6; }
+.pj-walker .back { stroke:#88836c; }
+.pj-nutrition { opacity:0; transition:opacity 350ms ease; }
+.show-nutrition .pj-nutrition { opacity:.55; }
+.pj-sheet figcaption { display:flex; flex-wrap:wrap; align-items:center; gap:12px 25px; margin:0 27px; padding:16px 0; border-top:1px solid #dcd4c0; font-size:.75rem; color:#726e5b; }
+.pj-key { display:flex; align-items:center; gap:8px; }
+.pj-key i { display:inline-block; width:22px; height:3px; background:#65734c; }
+.pj-key.needs i { height:1px; background:#544f40; }
+.pj-caption { margin-left:auto; font:italic 15px Georgia,serif; }
+.pj-controls { display:flex; align-items:center; gap:20px; padding:22px 20px 0; }
+.pj-controls button { border:1px solid #b7b39f; border-radius:4px; background:transparent; color:#4d523f; padding:8px 14px; font:12px system-ui; cursor:pointer; min-height:38px; }
+.pj-controls button:hover,.pj-controls button[aria-pressed="true"] { background:#dcdcc9; }
+.pj-scrub { flex:1; }
+.pj-scrub input { width:100%; accent-color:#65734c; cursor:pointer; }
+.pj-current-month { width:80px; font:italic 17px Georgia,serif; }
+.pj-observation { display:flex; align-items:baseline; gap:16px; padding:16px 20px 0; }
+.pj-observation p { margin:0; font:23px Georgia,serif; }
+.pj-observation [data-short="true"] { color:#9d5f46; }
+.pj-observation span { font-size:.77rem; color:#77705c; }
+#pj-nutrition-detail { margin:18px 20px 0; padding:15px 0; border-top:1px solid #c8c1ab; font-size:.84rem; }
+.pj-legend { display:flex; flex-wrap:wrap; gap:10px 23px; list-style:none; padding:0; margin:0; }
+.pj-legend li { display:flex; align-items:center; gap:7px; }
+.pj-legend i { width:14px; height:2px; }
+.pj-detail-note { color:#79715f; font-size:.75rem; }
+.pj-footer { margin:22px 20px 0; padding-top:19px; border-top:1px solid #cfc7b2; display:flex; justify-content:space-between; gap:24px; }
+.pj-footer p { font:italic 17px/1.6 Georgia,serif; margin:0; color:#69694f; }
+.pj-footer small { font-size:.7rem; line-height:1.7; color:#8a806b; text-align:right; }
+.prospect :focus-visible { outline:2px solid #6e784f; outline-offset:4px; }
+@media(max-width:650px) {
+ .prospect { padding-top:25px; }
+ .pj-heading { padding-inline:10px; }
+ .pj-heading h1 { font-size:44px; }
+ .pj-folio { display:none; }
+ .pj-heading > p:last-of-type { font-size:16px; }
+ .pj-sheet-head { padding-inline:15px; font-size:15px; }
+ .pj-sheet-head span:last-child { display:none; }
+ .pj-sheet figcaption { margin-inline:15px; }
+ .pj-caption { margin-left:0; }
+ .pj-controls { flex-wrap:wrap; gap:12px; padding-inline:8px; }
+ .pj-scrub { order:3; flex-basis:100%; }
+ .pj-current-month { flex:1; text-align:center; }
+ .pj-observation { padding-inline:8px; display:block; }
+ .pj-observation p { font-size:21px; }
+ .pj-footer { margin-inline:8px; display:block; }
+ .pj-footer small { display:block; text-align:left; margin-top:12px; }
 }
-
-/* The stores as a mass. Dark, so the six lines read against it. */
-.pr-fill  { fill: rgba(233, 238, 242, 0.10); }
-
-/* The five that are only passing through. */
-.pr-band  { fill: none; stroke-width: 1.3; opacity: 0.34; }
-
-/* And the floor — same colours, but it is carrying weight, so it is drawn
-   like it. */
-.pr-floor { fill: none; stroke-width: 3.4; stroke-linecap: round; }
-
-/* The requirement. The one line that is not a nutrient. */
-.pr-need {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 2.2;
-  opacity: 0.9;
-}
-
-/* More than he needs — the feast is a thing you can see him in. */
-.pr-surplus { fill: rgba(228, 179, 99, 0.17); stroke: none; }
-
-/* Nothing under him. */
-.pr-gap { fill: url(#pr-hatch); stroke: none; }
-.pr-hatch-line { stroke: var(--short); stroke-width: 1.6; opacity: 0.5; }
-
-.pr-fig {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 2.2;
-  stroke-linecap: round;
-}
-.pr-walker circle.pr-fig { fill: var(--ground); }
-
-.pr-glyph {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  opacity: 0.5;
-}
-.pr-season {
-  fill: var(--ink);
-  opacity: 0.4;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-anchor: middle;
-}
-
-.pr-moon-o { fill: none; stroke: var(--ink); stroke-width: 0.9; opacity: 0.28; }
-.pr-moon-f { fill: var(--ink); opacity: 0.28; }
-
-.pr-mark {
-  font-size: 13px;
-  letter-spacing: 0.18em;
-  text-anchor: end;
-  fill: var(--ink);
-  opacity: 0.55;
-}
-.pr-famine { fill: var(--short); opacity: 0.9; }
-
-.pr-under {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  fill: var(--ink);
-  opacity: 0.45;
-}
-.pr-under-v { letter-spacing: 0.02em; opacity: 1; }
-
-.pr-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1.4rem;
-  list-style: none;
-  margin: 0.9rem 0 0;
-  padding: 0;
-  font-size: 0.85rem;
-  opacity: 0.75;
-}
-.pr-legend li { display: flex; align-items: center; gap: 0.45rem; }
-.pr-dot { width: 10px; height: 10px; border-radius: 50%; }
-
-.pr-figure figcaption {
-  max-width: 60ch;
-  margin: 1rem 0 0;
-  font-size: 0.9rem;
-  opacity: 0.7;
-  line-height: 1.55;
-}
-.pr-note { margin: 1.5rem 0 0.75rem; max-width: 60ch; }
+@media(prefers-reduced-motion:reduce) { .pj-nutrition { transition:none; } }
