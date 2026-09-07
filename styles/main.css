@@ -1090,10 +1090,7 @@ body[data-page="prospect"] {
 }
 .prospect { width:min(1200px,94vw); padding:38px 0 30px; color:var(--ink); }
 .pj-heading { position:relative; padding:0 20px 22px; }
-.pj-eyebrow { font-size:.68rem; letter-spacing:.23em; margin:0 0 8px; }
 .pj-heading h1 { font:italic 54px/1.1 Georgia,serif; margin:0; font-weight:normal; }
-.pj-heading > p:last-of-type { margin:12px 0 0; font:18px/1.5 Georgia,serif; color:#706f5e; }
-.pj-folio { position:absolute; right:22px; top:18px; font:italic 16px Georgia,serif; color:#827b65; }
 .pj-sheet { margin:0; background:#f8f3e7; border:1px solid #d3ccb9; box-shadow:0 5px 18px #5d543b0c; }
 .pj-sheet-head { display:flex; justify-content:space-between; padding:19px 27px 0; font:italic 17px Georgia,serif; color:#78705c; }
 .pj-sheet-head span:last-child { font-size:14px; }
@@ -1144,8 +1141,6 @@ body[data-page="prospect"] {
  .prospect { padding-top:25px; }
  .pj-heading { padding-inline:10px; }
  .pj-heading h1 { font-size:44px; }
- .pj-folio { display:none; }
- .pj-heading > p:last-of-type { font-size:16px; }
  .pj-sheet-head { padding-inline:15px; font-size:15px; }
  .pj-sheet-head span:last-child { display:none; }
  .pj-sheet figcaption { margin-inline:15px; }

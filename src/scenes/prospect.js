@@ -1,7 +1,7 @@
 import { prospectSVG, runProspect, BANDS } from '../art/prospect.js';
 export function render(el){
  el.innerHTML=`<section class="prospect">
- <header class="pj-heading"><p class="pj-eyebrow">LOAM / FIELD NOTES</p><h1>Prospect</h1><p>A year of food, and the ground beneath your feet.</p><span class="pj-folio" aria-hidden="true">study no. 04</span></header>
+ <header class="pj-heading"><h1>Prospect</h1></header>
  <figure class="pj-sheet"><div class="pj-sheet-head"><span>A walk through the stores</span><span>summer → summer</span></div>
  <div class="pj-scroll" tabindex="0" aria-label="Seasonal drawing. Scroll horizontally on small screens.">${prospectSVG()}</div>
  <figcaption><span class="pj-key"><i></i>Food available</span><span class="pj-key needs"><i></i>Daily needs</span><span class="pj-caption">Above the line, feast. Below it, famine.</span></figcaption></figure>
