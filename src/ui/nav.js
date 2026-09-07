@@ -27,6 +27,7 @@ const UTILITY = [
     label: 'Appendix',
     items: [
       { label: 'Nutrients',            href: '#/nutrients' },
+      { label: 'Prospect',             href: '#/prospect' },
       { label: 'The texture triangle', href: '#/texture-triangle' },
       { label: 'Soil components',      href: '#/soil-components' },
     ],

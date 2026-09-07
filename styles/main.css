@@ -1082,3 +1082,127 @@ a.piece:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 /* The playing state keeps the time cue visible until the soil return; the
    final state must win that cascade so the clock leaves with the old plant. */
 .sow-stage.is-soil.is-playing .sow-time { opacity: 0; }
+
+/* --------------------------------------------------------------------------
+   PROSPECT
+
+   Dusk. The nutrients screen went cool because it is an instrument; this one
+   goes cool and a shade bluer because it is about time passing, and every
+   warm thing on it is food.
+   -------------------------------------------------------------------------- */
+body[data-page="prospect"] {
+  --ground: #28303A;
+  --ink:    #E9EEF2;
+  --bar:    #323C48;
+  --panel:  #3E4A57;
+  --line:   rgba(233, 238, 242, 0.20);
+  --hover:  rgba(233, 238, 242, 0.10);
+  --short:  #C0483B;   /* the one colour that means a shortfall */
+}
+
+/* The drawing wants width. Everything else on the page keeps its measure. */
+.prospect { max-width: 76rem; }
+.prospect > h1, .prospect > .lede,
+.prospect > .pr-note, .prospect > .placeholder { max-width: 60ch; }
+
+.pr-figure { margin: 1.75rem 0 0; }
+
+.pr-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 3px;
+}
+
+/* The stores as a mass. Dark, so the six lines read against it. */
+.pr-fill  { fill: rgba(233, 238, 242, 0.10); }
+
+/* The five that are only passing through. */
+.pr-band  { fill: none; stroke-width: 1.3; opacity: 0.34; }
+
+/* And the floor — same colours, but it is carrying weight, so it is drawn
+   like it. */
+.pr-floor { fill: none; stroke-width: 3.4; stroke-linecap: round; }
+
+/* The requirement. The one line that is not a nutrient. */
+.pr-need {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.2;
+  opacity: 0.9;
+}
+
+/* More than he needs — the feast is a thing you can see him in. */
+.pr-surplus { fill: rgba(228, 179, 99, 0.17); stroke: none; }
+
+/* Nothing under him. */
+.pr-gap { fill: url(#pr-hatch); stroke: none; }
+.pr-hatch-line { stroke: var(--short); stroke-width: 1.6; opacity: 0.5; }
+
+.pr-fig {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.pr-walker circle.pr-fig { fill: var(--ground); }
+
+.pr-glyph {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+.pr-season {
+  fill: var(--ink);
+  opacity: 0.4;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-anchor: middle;
+}
+
+.pr-moon-o { fill: none; stroke: var(--ink); stroke-width: 0.9; opacity: 0.28; }
+.pr-moon-f { fill: var(--ink); opacity: 0.28; }
+
+.pr-mark {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-anchor: end;
+  fill: var(--ink);
+  opacity: 0.55;
+}
+.pr-famine { fill: var(--short); opacity: 0.9; }
+
+.pr-under {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  fill: var(--ink);
+  opacity: 0.45;
+}
+.pr-under-v { letter-spacing: 0.02em; opacity: 1; }
+
+.pr-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+.pr-legend li { display: flex; align-items: center; gap: 0.45rem; }
+.pr-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+.pr-figure figcaption {
+  max-width: 60ch;
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  line-height: 1.55;
+}
+.pr-note { margin: 1.5rem 0 0.75rem; max-width: 60ch; }

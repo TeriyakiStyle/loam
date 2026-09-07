@@ -16,6 +16,7 @@ import * as physical from './scenes/physical.js';
 import * as biological from './scenes/biological.js';
 import * as nutrients from './scenes/nutrients.js';
 import * as sow from './scenes/sow.js';
+import * as prospect from './scenes/prospect.js';
 
 const routes = {
   '/':           { scene: title,   name: 'LOAM',              bar: false },
@@ -27,6 +28,7 @@ const routes = {
                                    name: 'LOAM — Sow and Grow', bar: true },
 
   '/nutrients':  { scene: nutrients, name: 'LOAM — Nutrients', bar: true },
+  '/prospect':   { scene: prospect,  name: 'LOAM — Prospect',  bar: true },
 
   '/texture-triangle': { scene: section('The texture triangle', '',
                            'Nothing here yet.'),
