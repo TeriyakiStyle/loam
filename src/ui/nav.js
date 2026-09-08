@@ -17,6 +17,7 @@ const SECTIONS = [
   { label: 'Physical',     href: '#/physical' },
   { label: 'Biological',   href: '#/biological' },
   { label: 'Sow and Grow', href: '#/sow' },
+  { label: 'LOAM', href: '#/loam' },
 ];
 
 const UTILITY = [

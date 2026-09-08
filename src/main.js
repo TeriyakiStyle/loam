@@ -17,8 +17,10 @@ import * as biological from './scenes/biological.js';
 import * as nutrients from './scenes/nutrients.js';
 import * as sow from './scenes/sow.js';
 import * as prospect from './scenes/prospect.js';
+import * as loam from './scenes/loam.js';
 
 const routes = {
+  '/loam': { scene: loam, name: 'LOAM — Bed workshop', bar: true },
   '/':           { scene: title,   name: 'LOAM',              bar: false },
   '/field':      { scene: field,   name: 'LOAM — Field',      bar: true  },
 
