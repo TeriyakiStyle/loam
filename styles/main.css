@@ -95,6 +95,11 @@ body {
 /* The wordmark is a stroke drawing, so it takes its colour from the text. */
 .wordmark { color: var(--ink); width: min(46vw, 210px); height: auto; }
 
+/* The logo stands where the cube stood. It carries its own palette, and it is
+   taller than it is wide, so it is bound by HEIGHT — bound it by width and it
+   grows downward past everything under it. */
+.logo { height: min(64vw, 320px); width: auto; }
+
 .cube { width: min(60vw, 280px); height: auto; }
 .field-scene .cube { width: min(38vw, 170px); }
 

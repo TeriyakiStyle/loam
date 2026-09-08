@@ -1,12 +1,11 @@
 // ---------------------------------------------------------------------------
 // TITLE SCENE — the front page.
 //
-// The cube is the way in: it's a real link, so it works with the keyboard,
+// The logo is the way in: it's a real link, so it works with the keyboard,
 // middle-click and the Back button without any of that being written here.
 // The quote is drawn at random from assets/quotes.txt on each visit.
 // ---------------------------------------------------------------------------
 
-import { cubeSVG, SOILS } from '../art/cube.js';
 import { loadQuotes, pick } from '../quotes.js';
 
 export function render(el, _store) {
@@ -15,7 +14,7 @@ export function render(el, _store) {
       <img class="wordmark" src="assets/wordmark-loam.svg" alt="LOAM" width="141" height="38">
 
       <a class="cube-link" href="#/physical" aria-label="Enter">
-        ${cubeSVG(SOILS.loam, 256)}
+        <img class="logo" src="assets/Loam_Logo.svg" alt="" width="909" height="1164">
       </a>
 
       <figure class="quote" data-quote>
