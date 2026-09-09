@@ -9,6 +9,33 @@ filled in. What's here is marked so you can tell the difference:
 
 ---
 
+## Authoritative system specifications
+
+These documents define the version 1 soil–plant game model and its required
+behavior. They are implementation specifications, not implementation-status
+reports. Their explicit scope governs this subsystem; broader physiological
+research is maintained separately.
+
+| Specification | Responsibility |
+|---|---|
+| [Soil](SOIL.md) | Persistent ground, resource storage, treatments and residue release |
+| [Growing-System–Plant Contract](GROWING-SYSTEM-PLANT.md) | Shared delivery interface, transactions, reports and conservation for all growing systems |
+| [Soil–Plant Adapter](SOIL-PLANT.md) | Soil-specific mapping, work/observation policy and residue acceptance |
+| [Plant](PLANT.md) | Species definitions, resource demand, growth, yield and harvest |
+
+Read the shared contract first for integration; use the two system specifications
+to implement each side. [Working notes](working/README.md) hold code audits,
+research references and parameter calibration. They do not override these
+specifications. Changes to the shared exchange require affected specifications
+and their version numbers to be updated together.
+
+Plant has no dependency on soil or any other provider. New aeroponic or
+hydroponic modules implement the shared contract with their own state and
+delivery rules. They do not require a separate plant implementation. Their
+physical models are outside the present soil subsystem specification.
+
+---
+
 ## How to use this document
 
 Four layers, in descending order of how long they last. They are usually all
@@ -121,6 +148,28 @@ player allocates a bed.
 any number implying one acre can't feed a household.
 
 ---
+
+### One thing limits at a time **[decided]**
+
+Growth takes the *worst* limiting factor, not the product of all of them —
+Liebig's Law of the Minimum. Water, nitrogen, temperature, light: whichever
+is scarcest sets the ceiling, and improving anything else changes nothing
+until it becomes the scarcest.
+
+This is the classical agronomic model, so accuracy supports it. It also makes
+the core question of play *what is limiting?*, which is what the investigation
+pillar runs on. Multiplicative limitation muddies that — everything slightly
+wrong, nothing clearly wrong, and a bad year that teaches nothing.
+
+The corollary isn't optional: **the sim must always record which factor was
+limiting, and when.** Not for the model — for the player. Without that record,
+investigation has nothing to read.
+
+**Says no to:** blended stress scores, a single "soil health" number, any
+readout that averages several factors into one.
+
+---
+
 
 ## 3. Gameplay pillars
 
@@ -279,3 +328,4 @@ Newest first. Keep it short; this is for remembering *why*, not what.
 | 2026-09-08 | Invitation works by vampire rules — host grants, can revoke, symmetric |
 | 2026-09-08 | The acre is a prison; the constraint is hard, not social |
 | 2026-09-08 | Setting: everyone placed on one acre, reason unknown, Pyre-style stills |
+| 2026-09-08 | Limitation model: Liebig minimum — one factor limits at a time |

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="840" viewBox="0 0 1200 840">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="#65784f"/></marker></defs>
+<rect width="1200" height="840" rx="12" fill="#f6f2e6"/>
+<g font-family="Arial,sans-serif" fill="#414c38">
+<text x="40" y="43" font-size="12" letter-spacing="3">LOAM / SYSTEM CONTRACT / 08 SEPTEMBER 2026</text>
+<text x="40" y="83" font-family="Georgia,serif" font-size="32">From ground to growth</text>
+<text x="40" y="114" font-size="15" fill="#777b65">Current implementation above. Proposed two-way exchange below.</text>
+<text x="40" y="155" font-size="12" letter-spacing="2">IMPLEMENTED · ONE GROUND CELL · ONE SIMULATED DAY</text>
+<rect x="40" y="180" width="280" height="205" rx="8" fill="#e1e7d1"/>
+<rect x="460" y="180" width="280" height="205" rx="8" fill="#e9dfc7"/>
+<rect x="880" y="180" width="280" height="205" rx="8" fill="#e0e8d9"/>
+<text x="60" y="212" font-size="21">SOIL</text><text x="60" y="243" font-size="15">fertility · structure · moisture</text>
+<text x="60" y="270" font-size="15">All indices: 0–1</text>
+<text x="60" y="308" font-family="monospace" font-size="14">q = .40F + .35S + .25M</text>
+<text x="60" y="341" font-size="14">tilled: artwork / preparation flag</text>
+<text x="60" y="366" font-size="13" fill="#777b65">No pools are depleted by plants.</text>
+<text x="480" y="212" font-size="21">WORLD</text>
+<text x="480" y="243" font-family="monospace" font-size="14">advanceDays(world, days)</text>
+<text x="480" y="279" font-size="15">Pull quality from soil.</text>
+<text x="480" y="305" font-size="15">Pass q and 1 day to the plant.</text>
+<text x="480" y="341" font-size="14">On completed harvest:</text>
+<text x="480" y="366" font-family="monospace" font-size="13">inventory.food += yieldKg(plant)</text>
+<text x="900" y="212" font-size="21">PLANT</text>
+<text x="900" y="243" font-size="15">species · age · qualityDays · ready</text>
+<text x="900" y="279" font-family="monospace" font-size="14">qualityDays += q × duration</text>
+<text x="900" y="305" font-family="monospace" font-size="14">age += duration</text>
+<text x="900" y="341" font-size="14">yield = potential × average q</text>
+<text x="900" y="366" font-size="13" fill="#777b65">Growth mutates plant state in place.</text>
+<path d="M325 240H454" fill="none" stroke="#65784f" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M745 240H874" fill="none" stroke="#65784f" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="390" y="223" text-anchor="middle" font-size="12">q · 0–1</text><text x="810" y="223" text-anchor="middle" font-size="12">1 day + q</text>
+<path d="M875 330H747" fill="none" stroke="#65784f" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="810" y="313" text-anchor="middle" font-size="12">state / yield kg</text>
+<rect x="40" y="406" width="1120" height="51" rx="6" fill="#eee2d7"/>
+<text x="60" y="437" font-size="16">No plant → soil exchange yet.</text><text x="337" y="437" font-size="14">No uptake, exudates, residues, shading feedback or nitrogen fixation.</text>
+<text x="40" y="499" font-size="12" letter-spacing="2">NEXT VERSION · NEEDED → OFFERED → TAKEN → GROWN → RETURNED</text>
+<rect x="40" y="523" width="280" height="228" rx="8" fill="#e1e7d1"/>
+<rect x="460" y="523" width="280" height="228" rx="8" fill="#e9dfc7"/>
+<rect x="880" y="523" width="280" height="228" rx="8" fill="#e0e8d9"/>
+<text x="60" y="559" font-size="21">SOIL</text>
+<text x="60" y="590" font-size="15">Water L · N / P / K game units</text>
+<text x="60" y="624" font-size="14">Offer is read-only; no reservation.</text>
+<text x="60" y="660" font-size="14">Commit actual uptake once.</text>
+<text x="60" y="695" font-size="14">Release residue nutrients over time.</text>
+<text x="60" y="730" font-size="13" fill="#777b65">Units and conservation are explicit.</text>
+<text x="480" y="559" font-size="18">EXCHANGE COORDINATOR</text>
+<text x="480" y="595" font-size="14">1. Release existing residues</text>
+<text x="480" y="624" font-size="14">2. Read demand and soil offer</text>
+<text x="480" y="653" font-size="14">3. Find limiting coverage</text>
+<text x="480" y="682" font-size="14">4. Deduct taken; advance plant</text>
+<text x="480" y="711" font-size="14">5. Return snapshot + DayReport</text>
+<text x="900" y="559" font-size="21">PLANT</text>
+<text x="900" y="590" font-size="15">Species · age · growth · held N/P/K</text>
+<text x="900" y="624" font-size="14">Request water and N / P / K.</text>
+<text x="900" y="660" font-size="14">Accumulate supported growth.</text>
+<text x="900" y="695" font-size="14">Harvest splits exports and residues.</text>
+<text x="900" y="730" font-size="13" fill="#777b65">Never edit soil state directly.</text>
+<path d="M325 595H454" fill="none" stroke="#65784f" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M745 595H874" fill="none" stroke="#65784f" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M875 690H747" fill="none" stroke="#65784f" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M455 690H327" fill="none" stroke="#65784f" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="390" y="579" text-anchor="middle" font-size="12">offer / root access</text><text x="810" y="579" text-anchor="middle" font-size="12">taken / growth</text>
+<text x="390" y="674" text-anchor="middle" font-size="12">debit / residue</text><text x="810" y="674" text-anchor="middle" font-size="12">demand / return</text>
+<text x="40" y="793" font-family="Georgia,serif" font-size="20">Current example: 90 days × 0.90 quality = 81 quality-days → 4 kg × 0.90 = 3.6 kg tomato yield.</text>
+<text x="40" y="823" font-size="12" fill="#777b65">Prototype game parameters, not a validated agronomic forecast. Source: src/workshop/soil.js, plants.js and world.js.</text>
+</g></svg>

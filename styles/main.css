@@ -1153,3 +1153,44 @@ body[data-page="prospect"] {
  .pj-footer small { display:block; text-align:left; margin-top:12px; }
 }
 @media(prefers-reduced-motion:reduce) { .pj-nutrition { transition:none; } }
+
+/* Prospect — the crop strip and the exchange it drives.
+   Plates sit on the baseline; roots and the soil particles continue below it,
+   through the same band the shortfall is drawn in. */
+.pj-plant { overflow: visible; }
+.pj-p { opacity: 0; }
+.pj-p.co2 { fill: #8f8a79; }
+.pj-p.o2 { fill: #9cc0d2; }
+.pj-p.npk { fill: #acd9ce; }
+.pj-p.smc { fill: #c2a7c4; }
+.pj-p.sugar { fill: #e6c97d; }
+.pj-p.o2 { animation: pj-lift 4.2s var(--d, 0s) linear infinite; }
+.pj-p.npk, .pj-p.smc { animation: pj-lift 5s var(--d, 0s) linear infinite; }
+.pj-p.sugar { animation: pj-settle 4.6s var(--d, 0s) linear infinite; }
+.pj-p.co2 { animation: pj-breath 5.4s var(--d, 0s) linear infinite; }
+/* Cut and laid down, the plant feeds the soil instead of drawing from it. */
+.pj-p.down { animation-name: pj-settle; }
+@keyframes pj-lift {
+  0% { opacity: 0; transform: translateY(6px); }
+  18% { opacity: .85; }
+  70% { opacity: .55; }
+  100% { opacity: 0; transform: translateY(-32px); }
+}
+@keyframes pj-settle {
+  0% { opacity: 0; transform: translateY(-6px); }
+  18% { opacity: .9; }
+  70% { opacity: .5; }
+  100% { opacity: 0; transform: translateY(34px); }
+}
+@keyframes pj-breath {
+  0% { opacity: 0; transform: translate(0, 0); }
+  22% { opacity: .7; }
+  100% { opacity: 0; transform: translate(27px, -36px); }
+}
+/* The exchange holds still whenever the walk does. */
+.prospect.is-still .pj-p { animation-play-state: paused; opacity: .55; }
+/* Round swatches separate the particles from the two plotted lines. */
+.pj-key.dot i { width: 8px; height: 8px; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .pj-p { animation: none; opacity: .55; }
+}
